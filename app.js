@@ -9,7 +9,7 @@ const SHARED_INDEX = SHARED_DIR + 'index.json';
 const SYNC_EVERY_MS = 30 * 60 * 1000;
 
 // Paste your Google Apps Script web app URL here (ends in /exec). Leave empty to turn off sending.
-const FEEDBACK_ENDPOINT = '';
+const FEEDBACK_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxI4CGbsj3ve20NnKCCXgcdnOrxokPDUZiFJYhDLsx_31sqMtv5gaoTvwyiqrGHxZbHIQ/exec';
 
 // Spaced repetition intervals by box (box 0 = just missed)
 const MIN = 60 * 1000, DAY = 24 * 60 * MIN;
