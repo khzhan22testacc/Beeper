@@ -21,12 +21,11 @@ Open it once while online so it caches for offline use.
 
 ## Using it
 
-- **Home:** your stats (used, correct, and due if spaced repetition is on), a resume card for any block in progress, then Mode, Questions (Unused, All, Incorrect, Flagged, Due), Sources (when you have more than one bank), Systems, Number of questions, and Start block.
-- **Tutor mode:** tap an answer to lock it in. Each choice then shows a one-line reason it's right or wrong, followed by the explanation, source, outside links and the feedback tags. Nothing is hidden behind a dropdown.
-- **Timed mode:** 90 seconds per question, answers can be changed, explanations at the end.
-- **Results:** score for the block and a list you can tap to review each question.
-- **Settings → Spaced repetition:** on, each answer sets a review date and the Due filter appears. Off, there are no review dates.
-- Question banks are added and removed in Settings. "Flagged" means questions you've given feedback on.
+- **Home:** stats (used, correct, incorrect), then filters: Questions (Unused, All, Incorrect), Sources (when you have more than one bank) and Systems. **Start** begins questions from that set, one after another, until you tap **Home**.
+- **Answering:** tap an answer. A correct answer sends up a little confetti; a wrong one flashes the pager light red. Each choice then shows a one-line reason it's right or wrong, followed by the explanation, source and outside links.
+- **Feedback (optional):** "Excellent question, more please!" or "Please fix this", plus an optional comment box. Tap a button again to undo.
+- **Settings → Spaced repetition:** on, questions you miss come back sooner and well-known ones less often. Off, questions are random with unseen ones first. No review dates are shown either way.
+- Question banks are added and removed in Settings.
 
 ## Question bank format
 
@@ -45,7 +44,7 @@ Same format the qbank generator skill produces, so its files load as is:
 
 ### Sent automatically to a Google Sheet (optional)
 
-When `FEEDBACK_ENDPOINT` in `app.js` is set, flags and notes go straight to your Sheet. Flags made offline wait on the phone and send once it's back online. Each person gets one row per question, and editing a flag updates that row.
+When `FEEDBACK_ENDPOINT` in `app.js` is set, ratings and comments go straight to your Sheet. Feedback given offline waits on the phone and send once it's back online. Each person gets one row per question, and changing their rating or comment updates that row.
 
 Setup, about 10 minutes:
 
@@ -63,7 +62,7 @@ The URL is visible in the app's public code, so anyone could technically post to
 
 ### Manual export
 
-Settings → Question feedback → Export feedback file still works, with or without the Sheet. The format (`"type": "feedback"`, with `items` holding `bank_id`, `question_id`, `feedback`, `note`, `my_performance` and the full `question`) is what the generator's refine mode reads.
+Settings → Question feedback → Export feedback file still works, with or without the Sheet. The format is `"type": "feedback"`, with `items` holding `bank_id`, `question_id`, `feedback` (`["more"]` or `["fix"]`), `note`, `my_performance` and the full `question`.
 
 ## Progress backup
 

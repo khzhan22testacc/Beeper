@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '4.0.0';
 
 // Paste your Google Apps Script web app URL here (ends in /exec). Leave empty to turn off sending.
 const FEEDBACK_ENDPOINT = '';
@@ -10,10 +10,8 @@ const MIN = 60 * 1000, DAY = 24 * 60 * MIN;
 const INTERVALS = [10 * MIN, 1 * DAY, 3 * DAY, 7 * DAY, 16 * DAY, 35 * DAY];
 
 const FEEDBACK_TYPES = [
-  ['incorrect', 'Incorrect question'],
-  ['not_relevant', 'Not clinically relevant'],
-  ['too_long', 'Too long'],
-  ['other', 'Other'],
+  ['more', 'Excellent question, more please!'],
+  ['fix', 'Please fix this'],
 ];
 
 const SYSTEM_ORDER = ['Cardiology', 'Respirology', 'Gastroenterology', 'Hepatology', 'Nephrology', 'Endocrinology',
@@ -161,13 +159,10 @@ async function getMeta(k, fallback) {
 }
 const setMeta = (k, v) => idb.put('meta', { k, v });
 
-const SECONDS_PER_Q = 90;
 const POOLS = [
   ['unused', 'Unused'],
   ['all', 'All'],
   ['incorrect', 'Incorrect'],
-  ['flagged', 'Flagged'],
-  ['due', 'Due'],
 ];
 
 // ---------- State ----------
@@ -178,12 +173,11 @@ const state = {
   progress: new Map(),
   feedback: new Map(),
   settings: { sr: true, buzz: true, name: '' },
-  home: { mode: 'tutor', pool: 'unused', systems: [], count: 10 },
+  home: { pool: 'unused', systems: [] },
   hints: { installDismissed: false },
   clientId: '',
   outbox: new Map(),
-  session: null,
-  timerId: null,
+  run: null,
 };
 const keyOf = (bankId, qid) => `${bankId}::${qid}`;
 
@@ -199,42 +193,57 @@ function sourceItems() {
   return out;
 }
 const sysOf = item => item.q.system || 'Other';
+function lastOk(p) { return p && p.history && p.history.length ? p.history[p.history.length - 1].ok : null; }
 
-function inPool(item, pool, now) {
+function inPool(item, pool) {
   const p = state.progress.get(item.key);
   switch (pool) {
     case 'unused': return !p || !p.attempts;
     case 'incorrect': return !!p && p.attempts > 0 && lastOk(p) === false;
-    case 'flagged': return state.feedback.has(item.key);
-    case 'due': return state.settings.sr && !!p && p.attempts > 0 && p.due <= now;
     default: return true;
   }
 }
-function lastOk(p) { return p && p.history && p.history.length ? p.history[p.history.length - 1].ok : null; }
-function pools() { return POOLS.filter(([k]) => k !== 'due' || state.settings.sr); }
 function candidates() {
-  const now = Date.now();
   const sys = state.home.systems;
-  return sourceItems().filter(x => inPool(x, state.home.pool, now) && (!sys.length || sys.includes(sysOf(x))));
+  return sourceItems().filter(x => inPool(x, state.home.pool) && (!sys.length || sys.includes(sysOf(x))));
 }
 function systemsList() {
   const set = new Set(sourceItems().map(sysOf));
   return [...set].sort((a, b) => (SYSTEM_ORDER.indexOf(a) + 1 || 99) - (SYSTEM_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
 }
 function overallStats() {
-  const now = Date.now();
-  let used = 0, latestCorrect = 0, due = 0, flagged = 0;
+  let used = 0, latestCorrect = 0, missed = 0;
   const items = sourceItems();
   for (const x of items) {
     const p = state.progress.get(x.key);
-    if (state.feedback.has(x.key)) flagged++;
-    if (p && p.attempts) {
-      used++;
-      if (lastOk(p)) latestCorrect++;
-      if (p.due <= now) due++;
-    }
+    if (p && p.attempts) { used++; if (lastOk(p)) latestCorrect++; else missed++; }
   }
-  return { total: items.length, used, latestCorrect, due, flagged };
+  return { total: items.length, used, latestCorrect, missed };
+}
+
+// ---------- Picking the next question ----------
+// With spaced repetition on, missed questions come back sooner and well-known ones less often.
+// Nothing about scheduling is ever shown.
+function pickQuestion() {
+  const run = state.run;
+  const p = candidates();
+  if (!p.length) return null;
+  let pool = p.filter(x => !run.recent.includes(x.key));
+  if (!pool.length) pool = p.filter(x => x.key !== run.recent[run.recent.length - 1]);
+  if (!pool.length) pool = p;
+  const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+  const unseen = pool.filter(x => !state.progress.has(x.key));
+  if (!state.settings.sr) return unseen.length ? rand(unseen) : rand(pool);
+
+  const now = Date.now();
+  const ready = pool.filter(x => { const r = state.progress.get(x.key); return r && r.attempts && r.due <= now; });
+  if (ready.length && (Math.random() < 0.35 || !unseen.length)) {
+    ready.sort((a, b) => (state.progress.get(a.key).box || 0) - (state.progress.get(b.key).box || 0));
+    return rand(ready.slice(0, Math.max(3, Math.ceil(ready.length / 3))));
+  }
+  if (unseen.length) return rand(unseen);
+  const seen = pool.slice().sort((a, b) => ((state.progress.get(a.key) || {}).due || 0) - ((state.progress.get(b.key) || {}).due || 0));
+  return rand(seen.slice(0, Math.min(10, seen.length)));
 }
 
 function recordAnswer(key, choice, ok) {
@@ -259,11 +268,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const rich = t => String(t ?? '').trim().split(/\n\s*\n/).filter(Boolean).map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
 const pct = (n, d) => (d ? Math.round((100 * n) / d) + '%' : '—');
 const pad = (n, w) => String(Math.round(n)).padStart(w, '0');
-const mmss = sec => { sec = Math.max(0, Math.round(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; };
-function shuffle(a) {
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
-}
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let toastTimer;
 function toast(msg, ms = 2600) {
   const el = document.getElementById('toast');
@@ -291,32 +296,50 @@ async function shareJson(filename, obj) {
 }
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const saveHome = () => setMeta('home', state.home);
-const saveSession = () => setMeta('session', state.session);
 
-// ---------- Navigation + timer ----------
-function go(view, { keepScroll = false } = {}) {
-  stopTimer();
-  state.view = view;
-  render();
-  if (!keepScroll) window.scrollTo(0, 0);
-  const s = state.session;
-  if (view === 'quiz' && s && s.mode === 'timed' && !s.finished) startTimer();
+// ---------- Flourishes ----------
+const CONFETTI_COLORS = ['#8BE07A', '#B4C29A', '#F2C14E', '#5DA9E9', '#E8826B', '#C792EA'];
+function confetti(fromEl) {
+  if (reducedMotion() || !fromEl) return;
+  const r = fromEl.getBoundingClientRect();
+  const layer = document.createElement('div');
+  layer.className = 'fx';
+  document.body.appendChild(layer);
+  const ox = r.left + r.width * 0.15, oy = r.top + r.height / 2;
+  for (let i = 0; i < 26; i++) {
+    const bit = document.createElement('i');
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.1;
+    const dist = 70 + Math.random() * 110;
+    bit.style.left = `${ox}px`;
+    bit.style.top = `${oy}px`;
+    bit.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    bit.style.setProperty('--dx', `${Math.cos(angle) * dist + r.width * Math.random() * 0.5}px`);
+    bit.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+    bit.style.setProperty('--rot', `${(Math.random() - 0.5) * 720}deg`);
+    bit.style.animationDelay = `${Math.random() * 60}ms`;
+    if (i % 3 === 0) bit.style.borderRadius = '50%';
+    layer.appendChild(bit);
+  }
+  setTimeout(() => layer.remove(), 1300);
 }
-function startTimer() {
-  stopTimer();
-  let ticks = 0;
-  state.timerId = setInterval(() => {
-    const s = state.session;
-    if (!s || s.finished) return stopTimer();
-    s.remaining -= 1;
-    ticks++;
-    const el = document.getElementById('timer');
-    if (el) { el.textContent = mmss(s.remaining); el.classList.toggle('low', s.remaining <= 60); }
-    if (ticks % 5 === 0) saveSession();
-    if (s.remaining <= 0) { stopTimer(); toast('Time is up'); finishBlock(); }
-  }, 1000);
+function flashLed(kind) {
+  const led = document.getElementById('led');
+  if (!led) return;
+  led.classList.remove('flash', 'miss');
+  void led.offsetWidth; // restart the animation
+  led.classList.add(kind);
 }
-function stopTimer() { if (state.timerId) clearInterval(state.timerId); state.timerId = null; }
+function floatThanks(fromEl) {
+  if (!fromEl) return;
+  const r = fromEl.getBoundingClientRect();
+  const t = document.createElement('span');
+  t.className = 'thanks';
+  t.textContent = 'Thanks!';
+  t.style.left = `${r.left + r.width / 2}px`;
+  t.style.top = `${r.top}px`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1200);
+}
 
 // ---------- Views ----------
 function chip(action, v, label, count, on) {
@@ -326,32 +349,12 @@ function chip(action, v, label, count, on) {
 function viewHome() {
   const st = overallStats();
   const h = state.home;
-  const s = state.session;
-  const now = Date.now();
   const items = sourceItems();
-  if (!pools().some(([k]) => k === h.pool)) h.pool = 'unused';
-
-  const poolCounts = Object.fromEntries(pools().map(([k]) => [k, items.filter(x => inPool(x, k, now)).length]));
-  const sysChips = systemsList().map(sys => {
-    const n = items.filter(x => sysOf(x) === sys && inPool(x, h.pool, now)).length;
-    return chip('sys', sys, sys, n, h.systems.includes(sys));
-  }).join('');
+  if (!POOLS.some(([k]) => k === h.pool)) h.pool = 'unused';
+  const poolCounts = Object.fromEntries(POOLS.map(([k]) => [k, items.filter(x => inPool(x, k)).length]));
+  const sysChips = systemsList().map(sys => chip('sys', sys, sys, items.filter(x => sysOf(x) === sys && inPool(x, h.pool)).length, h.systems.includes(sys))).join('');
   const sourceChips = state.banks.map(b => chip('src', b.id, b.title || b.id, (b.questions || []).length, b.enabled !== false)).join('');
   const avail = candidates().length;
-  const count = Math.min(h.count, Math.max(avail, 1));
-
-  let sessionCard = '';
-  if (s && !s.finished) {
-    const answered = Object.keys(s.answers).length;
-    sessionCard = `
-    <section class="card">
-      <h2>Block in progress</h2>
-      <p>${s.mode === 'timed' ? 'Timed' : 'Tutor'}, ${answered} of ${s.keys.length} answered${s.mode === 'timed' ? `, ${mmss(s.remaining)} left` : ''}</p>
-      <div class="btn-row"><button class="btn" data-action="discard">Discard</button><button class="btn primary" data-action="resume">Resume</button></div>
-    </section>`;
-  } else if (s && s.finished) {
-    sessionCard = `<section class="card"><div class="btn-row"><button class="btn" data-action="go" data-view="results">Review last block</button></div></section>`;
-  }
 
   return `
   <header class="top">
@@ -366,29 +369,17 @@ function viewHome() {
     <div class="stat-grid">
       <div><div class="num">${st.used}/${st.total}</div><div class="lab">Used</div></div>
       <div><div class="num">${pct(st.latestCorrect, st.used)}</div><div class="lab">Correct</div></div>
-      ${state.settings.sr
-        ? `<div><div class="num">${st.due}</div><div class="lab">Due</div></div>`
-        : `<div><div class="num">${st.flagged}</div><div class="lab">Flagged</div></div>`}
+      <div><div class="num">${st.missed}</div><div class="lab">Incorrect</div></div>
     </div>
   </section>
 
-  ${sessionCard}
   ${usingSample() ? '<section class="card"><p class="small muted">You\u2019re seeing the built-in sample questions. Add your own bank files in Settings and the samples will be hidden.</p></section>' : ''}
   ${!isStandalone() && !state.hints.installDismissed ? `
   <section class="card hint"><span class="small">Add Pager to your home screen. It runs offline there and your progress is less likely to be cleared.</span><button class="link-btn" data-action="dismissHint">Got it</button></section>` : ''}
 
   <section class="card">
-    <h2>Mode</h2>
-    <div class="seg">
-      <button class="${h.mode === 'tutor' ? 'on' : ''}" data-action="mode" data-v="tutor">Tutor</button>
-      <button class="${h.mode === 'timed' ? 'on' : ''}" data-action="mode" data-v="timed">Timed</button>
-    </div>
-    <p class="small muted" style="margin-top:8px">${h.mode === 'tutor'
-      ? 'Tap an answer to lock it in and see the explanation.'
-      : `${SECONDS_PER_Q} seconds per question, explanations at the end.`}</p>
-
     <h2>Questions</h2>
-    <div class="chips">${pools().map(([k, label]) => chip('pool', k, label, poolCounts[k], h.pool === k)).join('')}</div>
+    <div class="chips">${POOLS.map(([k, label]) => chip('pool', k, label, poolCounts[k], h.pool === k)).join('')}</div>
 
     ${state.banks.length > 1 ? `
     <h2>Sources</h2>
@@ -397,29 +388,32 @@ function viewHome() {
     <h2>Systems</h2>
     <div class="chips">${chip('sys', '*', 'All systems', null, !h.systems.length)}${sysChips}</div>
 
-    <h2>Number of questions</h2>
-    <div class="stepper">
-      <button data-action="count" data-d="-1" aria-label="Fewer">−</button>
-      <span class="val">${avail ? count : 0}</span>
-      <button data-action="count" data-d="1" aria-label="More">+</button>
-      <span class="small muted">of ${avail} available</span>
-    </div>
-
-    <button class="btn primary block" data-action="start" ${avail ? '' : 'disabled'}>${avail ? 'Start block' : 'No questions match'}</button>
+    <button class="btn primary block" data-action="start" ${avail ? '' : 'disabled'}>${avail ? `Start (${avail} question${avail === 1 ? '' : 's'})` : 'No questions match'}</button>
   </section>`;
 }
 
 function viewQuiz() {
-  const s = state.session;
-  const n = s.keys.length;
-  const key = s.keys[s.idx];
-  const { q, bank } = state.byKey.get(key);
-  const chosen = s.answers[key];
-  const reveal = s.finished || (s.mode === 'tutor' && s.submitted[key]);
+  const run = state.run;
+  const top = `
+  <header class="top">
+    <button class="link-btn" data-action="home">‹ Home</button>
+    <span class="center small muted">${run.answered ? `${run.correct}/${run.answered} correct` : ''}</span>
+    <span style="width:64px"></span>
+  </header>`;
+  if (!run.key) {
+    return `${top}
+    <section class="card empty">
+      <h3>No more questions with these filters</h3>
+      <p class="small muted">Pick a different set on the home screen to keep going.</p>
+      <button class="btn primary block" data-action="home">Back to home</button>
+    </section>`;
+  }
+  const { q, bank } = state.byKey.get(run.key);
+  const chosen = run.chosen;
+  const reveal = !!chosen;
 
   const opts = (q.options || []).map(o => {
     let cls = 'opt';
-    if (chosen === o.label) cls += ' selected';
     if (reveal) {
       if (o.label === q.answer) cls += ' correct';
       else if (chosen === o.label) cls += ' wrong';
@@ -435,15 +429,13 @@ function viewQuiz() {
   if (reveal) {
     const correct = (q.options || []).find(o => o.label === q.answer);
     const correctText = correct ? `${esc(q.answer)}. ${esc(correct.text)}` : esc(q.answer);
-    let verdict;
-    if (!chosen) verdict = `<div class="verdict skip">Not answered. Answer: ${correctText}</div>`;
-    else if (chosen === q.answer) verdict = '<div class="verdict ok">Correct</div>';
-    else verdict = `<div class="verdict bad">Incorrect. Answer: ${correctText}</div>`;
-
+    const verdict = chosen === q.answer
+      ? '<div class="verdict ok">Correct</div>'
+      : `<div class="verdict bad">Incorrect. Answer: ${correctText}</div>`;
     const src = q.source || {};
     const srcText = typeof src === 'string' ? src : [src.book || bank.title, src.page ? `p. ${src.page}` : ''].filter(Boolean).join(', ');
     const refs = (q.references || []).filter(r => /^https?:\/\//.test(r.url || ''));
-    const fb = state.feedback.get(key);
+    const fb = state.feedback.get(run.key);
     const types = fb ? fb.types : [];
     after = `
     ${verdict}
@@ -454,40 +446,21 @@ function viewQuiz() {
       ${refs.length ? `<h3 style="margin-top:14px">Outside sources</h3><ul class="refs">${refs.map(r => `<li><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title || r.url)}</a>${r.supports ? `<br><span class="small muted">${esc(r.supports)}</span>` : ''}</li>`).join('')}</ul>` : ''}
     </section>
     <section class="card">
-      <h3>Question feedback</h3>
-      <p class="small muted">Optional.${FEEDBACK_ENDPOINT ? ' Sent to the question bank maintainer.' : ''}</p>
-      <div class="chips" style="margin-top:10px">
-        ${FEEDBACK_TYPES.map(([t, label]) => `<button class="chip ${types.includes(t) ? 'on' : ''}" data-action="flagType" data-v="${t}">${esc(label)}</button>`).join('')}
+      <div class="fb-buttons">
+        ${FEEDBACK_TYPES.map(([t, label]) => `<button class="fb ${t} ${types.includes(t) ? 'on' : ''}" data-action="feedback" data-v="${t}" aria-pressed="${types.includes(t)}">${esc(label)}</button>`).join('')}
       </div>
-      <textarea id="note" placeholder="What should change? (optional)" ${types.length ? '' : 'hidden'}>${esc(fb ? fb.note : '')}</textarea>
+      <label class="field"><span class="small muted">Optional feedback${FEEDBACK_ENDPOINT ? ', sent to the question bank maintainer' : ''}</span>
+        <textarea id="note" placeholder="Anything to add?">${esc(fb ? fb.note : '')}</textarea>
+      </label>
     </section>`;
   }
 
-  let primary;
-  if (s.finished) {
-    primary = s.idx < n - 1
-      ? '<button class="btn primary" data-action="next">Next</button>'
-      : '<button class="btn primary" data-action="go" data-view="results">Results</button>';
-  } else {
-    primary = s.idx < n - 1
-      ? '<button class="btn primary" data-action="next">Next</button>'
-      : `<button class="btn primary" data-action="finish">${s.mode === 'timed' ? 'End block' : 'Finish block'}</button>`;
-  }
-  const timer = s.mode === 'timed' && !s.finished ? `<span id="timer" class="timer ${s.remaining <= 60 ? 'low' : ''}">${mmss(s.remaining)}</span>` : '';
-  const endBtn = s.mode === 'timed' && !s.finished ? '<button class="link-btn" data-action="finish">End</button>' : '';
-
   return `
-  <header class="top">
-    <button class="link-btn" data-action="exit">‹ ${s.finished ? 'Results' : 'Home'}</button>
-    <span class="center">${s.idx + 1} / ${n}</span>
-    <div class="top-right">${timer}${endBtn}</div>
-  </header>
-  <div class="progress"><div style="width:${((s.idx + 1) / n) * 100}%"></div></div>
-
+  ${top}
   <section class="pager" aria-label="Question">
-    <div class="pager-top"><span class="brand">Pager</span><span class="led ${s.fresh ? 'flash' : 'on'}" aria-hidden="true"></span></div>
+    <div class="pager-top"><span class="brand">Pager</span><span id="led" class="led on ${run.fresh ? 'flash' : ''}" aria-hidden="true"></span></div>
     <div class="lcd screen">
-      <div class="lcd-head"><span>PG ${pad(s.idx + 1, 2)}/${pad(n, 2)}</span><span>${reveal ? esc((q.system || '').toUpperCase()) : ''}</span></div>
+      <div class="lcd-head"><span>PG ${pad(run.answered + (reveal ? 0 : 1), 2)}</span><span>${reveal ? esc((q.system || '').toUpperCase()) : ''}</span></div>
       <div class="lcd-text">
         ${rich(q.stem)}
         ${q.lead ? `<p class="lead">${esc(q.lead)}</p>` : ''}
@@ -497,53 +470,17 @@ function viewQuiz() {
 
   <div class="opts">${opts}</div>
   ${after}
-
-  <nav class="bar">
-    <button class="btn" data-action="prev" ${s.idx === 0 ? 'disabled' : ''}>Prev</button>
-    ${primary}
-  </nav>`;
-}
-
-function viewResults() {
-  const s = state.session;
-  let correct = 0, skipped = 0;
-  const rows = s.keys.map((key, i) => {
-    const { q } = state.byKey.get(key);
-    const a = s.answers[key];
-    let status = 'skip', mark = '–';
-    if (a) { if (a === q.answer) { status = 'ok'; mark = '✓'; correct++; } else { status = 'bad'; mark = '✗'; } } else skipped++;
-    return `<button class="row" data-action="review" data-i="${i}">
-      <span class="mark ${status}">${mark}</span>
-      <span class="row-txt"><b>Q${i + 1}</b> ${esc(q.system || '')}${q.topic ? `, ${esc(q.topic)}` : ''}</span>
-      <span class="chev">›</span>
-    </button>`;
-  }).join('');
-  const n = s.keys.length;
-  return `
-  <header class="top">
-    <button class="link-btn" data-action="go" data-view="home">‹ Home</button>
-    <span class="center">Results</span><span style="width:48px"></span>
-  </header>
-  <section class="card score">
-    <div class="big">${pct(correct, n)}</div>
-    <p>${correct} of ${n} correct${skipped ? `, ${skipped} unanswered` : ''}</p>
-    <p class="small muted">${s.mode === 'timed' ? 'Timed' : 'Tutor'} block. Tap any question to review it.</p>
-  </section>
-  <section class="card">${rows}</section>`;
+  ${reveal ? '<nav class="bar"><button class="btn primary" data-action="next">Next question</button></nav>' : ''}`;
 }
 
 function viewStats() {
   const st = overallStats();
-  const now = Date.now();
   const items = sourceItems();
   const rows = systemsList().map(sys => {
     const qs = items.filter(x => sysOf(x) === sys);
-    let used = 0, ok = 0, due = 0;
-    for (const x of qs) {
-      const p = state.progress.get(x.key);
-      if (p && p.attempts) { used++; if (lastOk(p)) ok++; if (p.due <= now) due++; }
-    }
-    return { sys, total: qs.length, used, ok, due };
+    let used = 0, ok = 0;
+    for (const x of qs) { const p = state.progress.get(x.key); if (p && p.attempts) { used++; if (lastOk(p)) ok++; } }
+    return { sys, total: qs.length, used, ok };
   });
   rows.sort((a, b) => {
     if (!a.used !== !b.used) return a.used ? -1 : 1;
@@ -552,21 +489,21 @@ function viewStats() {
   return `
   <header class="top">
     <button class="link-btn" data-action="go" data-view="home">‹ Home</button>
-    <span class="center">Performance</span><span style="width:48px"></span>
+    <span class="center">Performance</span><span style="width:64px"></span>
   </header>
   <section class="card">
     <div class="stat-grid">
       <div><div class="num">${pct(st.used, st.total)}</div><div class="lab">Bank used</div></div>
       <div><div class="num">${pct(st.latestCorrect, st.used)}</div><div class="lab">Correct</div></div>
-      <div><div class="num">${st.flagged}</div><div class="lab">Flagged</div></div>
+      <div><div class="num">${st.missed}</div><div class="lab">Incorrect</div></div>
     </div>
     <p class="small muted" style="margin-top:12px">\u201cCorrect\u201d uses your most recent attempt at each question.</p>
   </section>
   <section class="card">
     <h2>By system (weakest first)</h2>
     <table>
-      <thead><tr><th>System</th><th>Used</th><th>Correct</th>${state.settings.sr ? '<th>Due</th>' : ''}</tr></thead>
-      <tbody>${rows.map(r => `<tr><td>${esc(r.sys)}</td><td>${r.used}/${r.total}</td><td>${pct(r.ok, r.used)}</td>${state.settings.sr ? `<td>${r.due}</td>` : ''}</tr>`).join('')}</tbody>
+      <thead><tr><th>System</th><th>Used</th><th>Correct</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td>${esc(r.sys)}</td><td>${r.used}/${r.total}</td><td>${pct(r.ok, r.used)}</td></tr>`).join('')}</tbody>
     </table>
   </section>`;
 }
@@ -574,10 +511,11 @@ function viewStats() {
 function viewSettings() {
   const fbAll = [...state.feedback.values()];
   const counts = Object.fromEntries(FEEDBACK_TYPES.map(([t]) => [t, fbAll.filter(f => f.types.includes(t)).length]));
+  const notesOnly = fbAll.filter(f => !f.types.length && f.note).length;
   return `
   <header class="top">
     <button class="link-btn" data-action="go" data-view="home">‹ Home</button>
-    <span class="center">Settings</span><span style="width:48px"></span>
+    <span class="center">Settings</span><span style="width:64px"></span>
   </header>
 
   <section class="card">
@@ -594,7 +532,7 @@ function viewSettings() {
 
   <section class="card">
     <h2>Study</h2>
-    <label class="switch"><span><b>Spaced repetition</b><br><span class="small muted">Questions get a review date: missed ones come back sooner, ones you know well later. Adds the Due filter. When off, there are no review dates.</span></span><input type="checkbox" data-change="sr" ${state.settings.sr ? 'checked' : ''}></label>
+    <label class="switch"><span><b>Spaced repetition</b><br><span class="small muted">Questions you miss come back sooner, and ones you know well show up less often. When off, questions are random, unseen ones first.</span></span><input type="checkbox" data-change="sr" ${state.settings.sr ? 'checked' : ''}></label>
     <label class="switch"><span><b>Vibrate on answer</b><br><span class="small muted">Android only.</span></span><input type="checkbox" data-change="buzz" ${state.settings.buzz ? 'checked' : ''}></label>
   </section>
 
@@ -604,8 +542,9 @@ function viewSettings() {
     <label class="field"><b>Your name</b> <span class="small muted">(optional, sent with your feedback)</span>
       <input type="text" data-input="name" value="${esc(state.settings.name)}" maxlength="60" autocomplete="name">
     </label>` : ''}
-    ${fbAll.length ? FEEDBACK_TYPES.map(([t, label]) => `<div class="kv"><span>${esc(label)}</span><span>${counts[t]}</span></div>`).join('') + `<div class="kv"><span><b>Questions with feedback</b></span><span><b>${fbAll.length}</b></span></div>`
-      : '<p class="small muted">No feedback yet. After answering a question you can tag it as incorrect, not clinically relevant, too long, or other.</p>'}
+    ${fbAll.length ? FEEDBACK_TYPES.map(([t, label]) => `<div class="kv"><span>${esc(label)}</span><span>${counts[t]}</span></div>`).join('')
+      + (notesOnly ? `<div class="kv"><span>Comment only</span><span>${notesOnly}</span></div>` : '')
+      : '<p class="small muted">No feedback yet. After answering a question you can rate it or leave a comment.</p>'}
     <div class="btn-col" style="margin-top:14px">
       <button class="btn" data-action="exportFeedback" ${fbAll.length ? '' : 'disabled'}>Export feedback file</button>
       <button class="btn danger" data-action="clearFeedback" ${fbAll.length ? '' : 'disabled'}>Clear feedback on this phone</button>
@@ -630,8 +569,8 @@ function viewSettings() {
 
 function render() {
   const app = document.getElementById('app');
-  const views = { home: viewHome, quiz: viewQuiz, results: viewResults, stats: viewStats, settings: viewSettings };
-  if ((state.view === 'quiz' || state.view === 'results') && !state.session) state.view = 'home';
+  const views = { home: viewHome, quiz: viewQuiz, stats: viewStats, settings: viewSettings };
+  if (state.view === 'quiz' && !state.run) state.view = 'home';
   app.innerHTML = (views[state.view] || viewHome)();
   if (state.view === 'settings') fillPersist();
 }
@@ -643,45 +582,44 @@ async function fillPersist() {
     el.textContent = p == null ? 'Unknown' : p ? 'On' : 'Not granted';
   } catch (e) { el.textContent = 'Unknown'; }
 }
+function go(view) {
+  state.view = view;
+  render();
+  window.scrollTo(0, 0);
+}
 
-// ---------- Block lifecycle ----------
-async function startBlock() {
-  const pool = candidates();
-  if (!pool.length) return toast('No questions match these filters');
-  const n = Math.min(state.home.count, pool.length);
-  const keys = shuffle(pool.map(x => x.key)).slice(0, n);
-  state.session = {
-    id: Date.now(), mode: state.home.mode, keys, answers: {}, submitted: {}, idx: 0, finished: false,
-    remaining: state.home.mode === 'timed' ? n * SECONDS_PER_Q : null, startedAt: Date.now(), fresh: true,
-  };
-  await saveSession();
-  go('quiz');
-  state.session.fresh = false;
+// ---------- Questions ----------
+function start() {
+  state.run = { answered: 0, correct: 0, recent: [], key: null, chosen: null, fresh: false };
+  nextQuestion();
 }
-async function finishBlock() {
-  const s = state.session;
-  if (!s || s.finished) return;
-  stopTimer();
+function nextQuestion() {
   flushOutbox();
-  if (s.mode === 'timed') {
-    for (const key of s.keys) {
-      const a = s.answers[key];
-      if (a) recordAnswer(key, a, a === state.byKey.get(key).q.answer);
-    }
+  const run = state.run;
+  const item = pickQuestion();
+  run.key = item ? item.key : null;
+  run.chosen = null;
+  run.fresh = true;
+  if (item) {
+    run.recent.push(item.key);
+    const cap = Math.min(15, Math.max(1, Math.floor(candidates().length / 2)));
+    if (run.recent.length > cap) run.recent = run.recent.slice(-cap);
   }
-  s.finished = true;
-  s.idx = 0;
-  await saveSession();
-  go('results');
-}
-function moveTo(i) {
-  const s = state.session;
-  s.idx = i;
-  s.fresh = !s.finished;
-  saveSession();
-  flushOutbox();
   go('quiz');
-  s.fresh = false;
+  run.fresh = false;
+}
+function choose(label) {
+  const run = state.run;
+  if (!run || !run.key || run.chosen) return;
+  const ok = label === state.byKey.get(run.key).q.answer;
+  run.chosen = label;
+  run.answered += 1;
+  if (ok) run.correct += 1;
+  recordAnswer(run.key, label, ok);
+  buzz(ok ? 25 : [70, 50, 70]);
+  render();
+  if (ok) confetti(document.querySelector('.opt.correct'));
+  flashLed(ok ? 'flash' : 'miss');
 }
 
 // ---------- Feedback ----------
@@ -689,29 +627,39 @@ function blankFeedback(key) {
   const [bankId, ...rest] = key.split('::');
   return { key, bankId, questionId: rest.join('::'), types: [], note: '', updatedAt: 0 };
 }
-async function toggleFlag(type) {
-  const s = state.session;
-  const key = s.keys[s.idx];
-  const fb = state.feedback.get(key) || blankFeedback(key);
-  fb.types = fb.types.includes(type) ? fb.types.filter(t => t !== type) : [...fb.types, type];
+async function storeFeedback(key, fb) {
   fb.updatedAt = Date.now();
-  document.querySelectorAll('[data-action="flagType"]').forEach(b => b.classList.toggle('on', fb.types.includes(b.dataset.v)));
-  const note = document.getElementById('note');
-  if (note) note.hidden = !fb.types.length;
   if (!fb.types.length && !fb.note) { state.feedback.delete(key); await idb.del('feedback', key); }
   else { state.feedback.set(key, fb); await idb.put('feedback', fb); }
   queueSend(key);
 }
-let noteTimer;
+async function pickFeedback(el) {
+  const key = state.run.key;
+  const type = el.dataset.v;
+  const fb = state.feedback.get(key) || blankFeedback(key);
+  const wasOn = fb.types.includes(type);
+  fb.types = wasOn ? [] : [type]; // one rating at a time; tap again to undo
+  document.querySelectorAll('[data-action="feedback"]').forEach(b => {
+    const on = fb.types.includes(b.dataset.v);
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on);
+  });
+  if (!wasOn) floatThanks(el);
+  await storeFeedback(key, fb);
+}
+let noteTimer, noteDirty = false;
 function saveNote(value) {
-  const s = state.session;
-  const key = s.keys[s.idx];
+  const key = state.run.key;
   const fb = state.feedback.get(key) || blankFeedback(key);
   fb.note = value;
-  fb.updatedAt = Date.now();
   state.feedback.set(key, fb);
+  noteDirty = true;
   clearTimeout(noteTimer);
-  noteTimer = setTimeout(() => { idb.put('feedback', fb); queueSend(key); }, 600);
+  noteTimer = setTimeout(() => storeFeedback(key, fb), 600);
+}
+function noteDone(el) {
+  if (noteDirty && el.value.trim()) floatThanks(el);
+  noteDirty = false;
 }
 function feedbackItem(fb) {
   const labels = Object.fromEntries(FEEDBACK_TYPES);
@@ -765,9 +713,7 @@ async function flushOutbox() {
   if (pend) pend.textContent = state.outbox.size;
 }
 window.addEventListener('online', flushOutbox);
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') { saveSession(); flushOutbox(); }
-});
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushOutbox(); });
 
 async function exportFeedback() {
   const labels = Object.fromEntries(FEEDBACK_TYPES);
@@ -807,11 +753,7 @@ async function addBanks(files) {
     }
   }
   rebuildIndex();
-  dropStaleSession();
   render();
-}
-function dropStaleSession() {
-  if (state.session && !state.session.keys.every(k => state.byKey.has(k))) { state.session = null; saveSession(); }
 }
 async function exportProgress() {
   await shareJson(`pager-progress-${new Date().toISOString().slice(0, 10)}.json`, {
@@ -848,8 +790,8 @@ async function importProgress(data) {
 // ---------- Actions ----------
 const actions = {
   go: el => go(el.dataset.view),
+  home: () => { flushOutbox(); state.run = null; go('home'); },
   dismissHint: () => { state.hints.installDismissed = true; setMeta('hints', state.hints); render(); },
-  mode: el => { state.home.mode = el.dataset.v; saveHome(); render(); },
   pool: el => { state.home.pool = el.dataset.v; saveHome(); render(); },
   sys: el => {
     const v = el.dataset.v;
@@ -871,55 +813,16 @@ const actions = {
     for (const b of state.banks) await idb.put('banks', b);
     render();
   },
-  count: el => {
-    const avail = candidates().length;
-    const cur = Math.min(state.home.count, avail);
-    const up = Number(el.dataset.d) > 0;
-    let next;
-    if (up) next = cur < 10 ? cur + 1 : Math.floor(cur / 5) * 5 + 5;
-    else next = cur <= 10 ? cur - 1 : Math.ceil(cur / 5) * 5 - 5;
-    state.home.count = Math.max(1, Math.min(avail || 1, next));
-    saveHome(); render();
-  },
-  start: startBlock,
-  resume: () => { state.session.fresh = true; go('quiz'); state.session.fresh = false; },
-  discard: async () => {
-    if (!confirm('Discard this block? Answers already given in tutor mode stay recorded.')) return;
-    state.session = null; await saveSession(); render();
-  },
-  choose: el => {
-    const s = state.session;
-    const key = s.keys[s.idx];
-    if (s.finished || (s.mode === 'tutor' && s.submitted[key])) return;
-    const label = el.dataset.label;
-    s.answers[key] = label;
-    if (s.mode === 'tutor') {
-      s.submitted[key] = true;
-      const ok = label === state.byKey.get(key).q.answer;
-      recordAnswer(key, label, ok);
-      buzz(ok ? 25 : [70, 50, 70]);
-    }
-    saveSession();
-    go('quiz', { keepScroll: true });
-  },
-  next: () => { const s = state.session; if (s.idx < s.keys.length - 1) moveTo(s.idx + 1); },
-  prev: () => { const s = state.session; if (s.idx > 0) moveTo(s.idx - 1); },
-  finish: () => {
-    const s = state.session;
-    const unanswered = s.keys.filter(k => !s.answers[k]).length;
-    if (s.mode === 'timed' && !confirm(unanswered ? `End block with ${unanswered} unanswered?` : 'End block and see results?')) return;
-    if (s.mode === 'tutor' && unanswered && !confirm(`Finish with ${unanswered} skipped?`)) return;
-    finishBlock();
-  },
-  exit: () => { saveSession(); flushOutbox(); go(state.session.finished ? 'results' : 'home'); },
-  review: el => { state.session.idx = Number(el.dataset.i); saveSession(); go('quiz'); },
-  flagType: el => toggleFlag(el.dataset.v),
+  start,
+  next: nextQuestion,
+  choose: el => choose(el.dataset.label),
+  feedback: el => pickFeedback(el),
   removeBank: async el => {
     const b = state.banks.find(x => x.id === el.dataset.v);
     if (!b || !confirm(`Remove \u201c${b.title}\u201d from this phone? Your progress on it is kept and comes back if you add the file again.`)) return;
     await idb.del('banks', b.id);
     state.banks = state.banks.filter(x => x.id !== b.id);
-    rebuildIndex(); dropStaleSession(); render();
+    rebuildIndex(); render();
     toast(`Removed ${b.title}`);
   },
   exportFeedback,
@@ -929,10 +832,9 @@ const actions = {
   },
   exportProgress,
   resetProgress: async () => {
-    if (!confirm('Erase all answer history and review dates on this phone?')) return;
+    if (!confirm('Erase all answer history on this phone?')) return;
     if (!confirm('This cannot be undone. Consider exporting first. Erase anyway?')) return;
     await idb.clear('progress'); state.progress.clear();
-    state.session = null; await saveSession();
     render(); toast('Progress reset');
   },
 };
@@ -961,13 +863,13 @@ document.addEventListener('input', e => {
   if (e.target.id === 'note') saveNote(e.target.value);
   else if (e.target.dataset.input === 'name') { state.settings.name = e.target.value.trim().slice(0, 60); setMeta('settings', state.settings); }
 });
+document.addEventListener('focusout', e => { if (e.target.id === 'note') noteDone(e.target); });
 document.addEventListener('keydown', e => {
-  if (state.view !== 'quiz' || !state.session || /TEXTAREA|INPUT/.test(e.target.tagName)) return;
+  if (state.view !== 'quiz' || !state.run || /TEXTAREA|INPUT/.test(e.target.tagName)) return;
   const map = { 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E' };
   const label = map[e.key] || (/^[a-e]$/i.test(e.key) ? e.key.toUpperCase() : null);
-  if (label) { const el = document.querySelector(`[data-action="choose"][data-label="${label}"]`); if (el && !el.disabled) actions.choose(el); }
-  else if (e.key === 'ArrowRight') actions.next();
-  else if (e.key === 'ArrowLeft') actions.prev();
+  if (label && !state.run.chosen) choose(label);
+  else if ((e.key === 'Enter' || e.key === 'ArrowRight') && state.run.chosen && e.target.tagName !== 'BUTTON') nextQuestion();
 });
 
 // ---------- Boot ----------
@@ -977,12 +879,12 @@ async function boot() {
     state.banks = banks.sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
     state.progress = new Map(progress.map(p => [p.key, p]));
     state.feedback = new Map(feedback.map(f => [f.key, f]));
-    state.settings = { ...state.settings, ...(await getMeta('settings', {})) };
-    delete state.settings.systems;
-    state.home = { ...state.home, ...(await getMeta('home', {})) };
+    const settings = await getMeta('settings', {});
+    state.settings = { sr: settings.sr !== false, buzz: settings.buzz !== false, name: settings.name || '' };
+    const home = await getMeta('home', {});
+    state.home = { pool: home.pool || 'unused', systems: Array.isArray(home.systems) ? home.systems : [] };
     state.hints = { ...state.hints, ...(await getMeta('hints', {})) };
     state.outbox = new Map(await getMeta('outbox', []));
-    state.session = await getMeta('session', null);
     state.clientId = await getMeta('clientId', '');
     if (!state.clientId) {
       state.clientId = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now();
@@ -992,7 +894,6 @@ async function boot() {
     toast('Storage is unavailable, so progress won\u2019t be saved.');
   }
   rebuildIndex();
-  if (state.session && (!Array.isArray(state.session.keys) || !state.session.keys.every(k => state.byKey.has(k)))) state.session = null;
   go('home');
   flushOutbox();
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* ignore */ }

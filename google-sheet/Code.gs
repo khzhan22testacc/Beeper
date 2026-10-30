@@ -12,8 +12,8 @@
 const SHEET_NAME = 'Feedback';
 const HEADERS = ['received_at', 'name', 'bank_id', 'bank_title', 'bank_version', 'question_id',
   'feedback', 'note', 'feedback_at', 'my_performance', 'question', 'app_version', 'client_id'];
-const TAGS = ['incorrect', 'not_relevant', 'too_long', 'other'];
-const LABELS = { incorrect: 'Incorrect question', not_relevant: 'Not clinically relevant', too_long: 'Too long', other: 'Other' };
+const TAGS = ['more', 'fix'];
+const LABELS = { more: 'Excellent question, more please!', fix: 'Please fix this' };
 const MAX_BODY = 60000;
 
 function sheet_() {
