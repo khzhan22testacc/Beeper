@@ -3,6 +3,8 @@
  * Paste this into Extensions → Apps Script of a Google Sheet, then deploy as a web app
  * (Execute as: Me, Who has access: Anyone). Put the /exec URL in FEEDBACK_ENDPOINT in app.js.
  *
+ * Script v2: accepts any feedback type the app sends, so changing the app's options won't break it.
+ *
  * One row per person per question. If someone edits their flag, their row is updated;
  * if they remove all tags and the note, their row is deleted.
  * Beeper menu → Export feedback file makes a JSON file in your Drive in the format
@@ -12,8 +14,15 @@
 const SHEET_NAME = 'Feedback';
 const HEADERS = ['received_at', 'name', 'bank_id', 'bank_title', 'bank_version', 'question_id',
   'feedback', 'note', 'feedback_at', 'my_performance', 'question', 'app_version', 'client_id'];
-const TAGS = ['more', 'fix'];
-const LABELS = { more: 'Excellent question, more please!', fix: 'Please fix this' };
+const SCRIPT_VERSION = 'v2';
+// Known feedback types get friendly labels. Any other type the app sends (now or in a future
+// version) is still accepted and stored, so changing the app's feedback options never breaks this.
+const LABELS = {
+  more: 'Excellent question, more please!', fix: 'Please fix this',
+  incorrect: 'Incorrect question', not_relevant: 'Not clinically relevant', too_long: 'Too long', other: 'Other',
+};
+const TAG_PATTERN = /^[a-z][a-z0-9_]{0,29}$/;
+const MAX_TAGS = 5;
 const MAX_BODY = 60000;
 
 function sheet_() {
@@ -40,7 +49,9 @@ function doPost(e) {
   let d;
   try { d = JSON.parse(body); } catch (err) { return ContentService.createTextOutput('rejected'); }
 
-  const tags = Array.isArray(d.feedback) ? d.feedback.filter(t => TAGS.indexOf(t) !== -1) : [];
+  const tags = Array.isArray(d.feedback)
+    ? d.feedback.filter(t => typeof t === 'string').map(t => t.toLowerCase().trim()).filter(t => TAG_PATTERN.test(t)).slice(0, MAX_TAGS)
+    : [];
   const clientId = safe_(d.client_id, 64);
   const bankId = safe_(d.bank_id, 100);
   const questionId = safe_(d.question_id, 100);
@@ -78,7 +89,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return ContentService.createTextOutput('Beeper feedback endpoint is running.');
+  return ContentService.createTextOutput('Beeper feedback endpoint is running (' + SCRIPT_VERSION + ').');
 }
 
 function onOpen() {
@@ -110,9 +121,11 @@ function exportFeedback() {
       question: parse_(r[col('question')]),
     };
   });
+  const seen = {};
+  items.forEach(i => i.feedback.forEach(t => { seen[t] = LABELS[t] || t; }));
   const summary = { questions: items.length };
-  TAGS.forEach(t => { summary[t] = items.filter(i => i.feedback.indexOf(t) !== -1).length; });
-  const out = { type: 'feedback', app: 'pager', exportedAt: new Date().toISOString(), feedback_types: LABELS, summary, items };
+  Object.keys(seen).forEach(t => { summary[t] = items.filter(i => i.feedback.indexOf(t) !== -1).length; });
+  const out = { type: 'feedback', app: 'beeper', exportedAt: new Date().toISOString(), feedback_types: seen, summary, items };
   const name = 'beeper-feedback-' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd') + '.json';
   const file = DriveApp.createFile(name, JSON.stringify(out, null, 1), MimeType.PLAIN_TEXT);
   const html = HtmlService.createHtmlOutput(
