@@ -1,6 +1,6 @@
 {
   "banks": [
-    "rcpsc-im.json",
+    "rcpsc-im-v2.json",
     "medical-trivia.json"
   ]
 }
