@@ -1,0 +1,1209 @@
+{
+ "id": "rcpsc-im",
+ "title": "Royal College IM",
+ "questions": [
+  {
+   "id": "im-261029-01",
+   "system": "Cardiology",
+   "topic": "Apixaban dose reduction in AF",
+   "kind": "pharmacology",
+   "tags": [
+    "pharmacology"
+   ],
+   "stem": "84M w/ nonvalvular AF, starting anticoagulation. h/o HTN.\n\nWeight 72 kg\nCr 141 µmol/L (eGFR 42)",
+   "lead": "Correct apixaban dose?",
+   "options": [
+    {
+     "label": "A",
+     "text": "5 mg BID",
+     "explanation": "Standard dose, but he meets 2 of 3 reduction criteria."
+    },
+    {
+     "label": "B",
+     "text": "2.5 mg BID",
+     "explanation": "Correct: age ≥80 and Cr ≥133 µmol/L."
+    },
+    {
+     "label": "C",
+     "text": "5 mg OD",
+     "explanation": "Apixaban is dosed twice daily."
+    },
+    {
+     "label": "D",
+     "text": "2.5 mg OD",
+     "explanation": "Not a labelled AF regimen; underdoses stroke prevention."
+    },
+    {
+     "label": "E",
+     "text": "10 mg BID x7d, then 5 mg BID",
+     "explanation": "This is the VTE treatment regimen, not AF."
+    }
+   ],
+   "answer": "B",
+   "explanation": "Reduce apixaban to 2.5 mg BID in AF only when ≥2 of these are present: age ≥80, weight ≤60 kg, Cr ≥133 µmol/L. He has two (age and Cr). Off-label dose reduction for age or eGFR alone is common and may leave patients underprotected against stroke.",
+   "references": [
+    {
+     "title": "Inappropriate dose reduction of apixaban in AF (Clin Cardiol, PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6489803",
+     "supports": "2.5 mg BID if ≥2 of: weight ≤60 kg, age ≥80, Cr ≥133 µmol/L; off-label underdosing common"
+    },
+    {
+     "title": "NOAC dosing for stroke prevention in AF (Europace 2023, Table 1)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10451006/table/euad226-T1",
+     "supports": "Apixaban reduced-dose criteria (two of three)"
+    }
+   ],
+   "source": {
+    "book": "Apixaban labelling (ARISTOTLE criteria)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-02",
+   "system": "Cardiology",
+   "topic": "HFrEF: adding an SGLT2 inhibitor",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "62M w/ HFrEF (LVEF 30%), NYHA II, euvolemic. No DM. On sacubitril-valsartan, bisoprolol and spironolactone at tolerated doses.\n\nBP 112/70, HR 64.\nK 4.6 mmol/L\neGFR 52",
+   "lead": "Next best addition?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Digoxin",
+     "explanation": "Not one of the four foundational HFrEF therapies."
+    },
+    {
+     "label": "B",
+     "text": "Ivabradine",
+     "explanation": "For sinus HR ≥70 despite a maximally tolerated beta-blocker; HR is 64."
+    },
+    {
+     "label": "C",
+     "text": "Hydralazine-isosorbide dinitrate",
+     "explanation": "Mainly an alternative when RAAS inhibitors can't be used."
+    },
+    {
+     "label": "D",
+     "text": "Dapagliflozin",
+     "explanation": "Correct: SGLT2i is the fourth pillar, with or without diabetes."
+    },
+    {
+     "label": "E",
+     "text": "Amlodipine",
+     "explanation": "No HF benefit, and BP is already low-normal."
+    }
+   ],
+   "answer": "D",
+   "explanation": "SGLT2 inhibitors (dapagliflozin or empagliflozin) are one of the four foundational HFrEF therapies and reduce CV death and HF hospitalization whether or not the patient has diabetes. They need no titration and shouldn't wait until other drugs reach target doses. CCS advises against starting them at eGFR <20.",
+   "references": [
+    {
+     "title": "SGLT2i for the treatment of HF, CCS/CHFS cardiorenal guideline 2022",
+     "url": "https://ccs.ca/guideline/cardiorenal-2022/sglt2i-for-the-treatment-of-hf/",
+     "supports": "SGLT2i in HFrEF with or without diabetes; not for eGFR <20"
+    },
+    {
+     "title": "Practical guide to SGLT2 inhibitors in HFrEF (PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9117908",
+     "supports": "Four pillars; no titration; don't delay for target doses of other drugs"
+    }
+   ],
+   "source": {
+    "book": "CCS/CHFS Heart Failure Guidelines (2022 cardiorenal update)"
+   },
+   "review": {
+    "verdict": "revise",
+    "issues": [
+     "Option B explanation is inaccurate: ivabradine's threshold is sinus HR ≥70 on a maximally tolerated beta-blocker, not 'tachycardia'."
+    ]
+   }
+  },
+  {
+   "id": "im-261029-03",
+   "system": "Cardiology",
+   "topic": "Acute pericarditis first-line therapy",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "34M w/ 3d of sharp pleuritic chest pain, better sitting forward. Recent viral URI.\n\nT 37.6, HR 96, BP 124/78.\nECG: diffuse ST elevation, PR depression\nTroponin normal\nTTE: small effusion, normal LV function",
+   "lead": "Most appropriate Tx?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Ibuprofen plus colchicine x3 mo",
+     "explanation": "Correct: colchicine added to an NSAID reduces recurrence."
+    },
+    {
+     "label": "B",
+     "text": "Ibuprofen alone",
+     "explanation": "Treats pain, but recurrence is higher without colchicine."
+    },
+    {
+     "label": "C",
+     "text": "Prednisone 1 mg/kg/d",
+     "explanation": "Second-line; steroids are linked to more recurrence."
+    },
+    {
+     "label": "D",
+     "text": "Pericardiocentesis",
+     "explanation": "A small effusion without tamponade doesn't need drainage."
+    },
+    {
+     "label": "E",
+     "text": "Colchicine alone x2 wk",
+     "explanation": "Colchicine is an adjunct to an NSAID, given for 3 months."
+    }
+   ],
+   "answer": "A",
+   "explanation": "Acute viral/idiopathic pericarditis is treated with high-dose ASA or an NSAID (e.g., ibuprofen 600 mg q8h for 1–2 weeks, with gastroprotection) plus colchicine for 3 months, which reduces recurrence. Corticosteroids are second-line, for contraindications or incomplete response, because they're associated with more recurrences.",
+   "references": [
+    {
+     "title": "2015 ESC Guidelines for pericardial diseases: key points (ACC)",
+     "url": "https://www.acc.org/latest-in-cardiology/ten-points-to-remember/2015/10/30/12/01/2015-esc-guidelines-for-the-diagnosis-and-management-of-pericardial-diseases",
+     "supports": "ASA/NSAID 1–2 wk with gastroprotection plus colchicine 3 months as first-line"
+    },
+    {
+     "title": "Updates on management of acute and recurrent pericarditis (Healio Pharmacology Consult)",
+     "url": "https://www.healio.com/news/cardiology/20230818/pharmacology-consult-updates-on-management-of-acute-and-recurrent-pericarditis",
+     "supports": "Colchicine reduces recurrence; glucocorticoids second-line"
+    }
+   ],
+   "source": {
+    "book": "ESC Pericardial Disease Guidelines (2015)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-04",
+   "system": "Cardiology",
+   "topic": "Symptomatic severe aortic stenosis",
+   "kind": "indication",
+   "tags": [
+    "indication"
+   ],
+   "stem": "79F w/ 2 episodes of exertional presyncope and dyspnea on 1 flight of stairs.\n\nBP 138/76, HR 72.\nLate-peaking systolic murmur, soft S2.\nTTE: peak velocity 4.6 m/s, mean gradient 48 mmHg, AVA 0.8 cm², LVEF 60%",
+   "lead": "Most appropriate management?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Exercise treadmill test",
+     "explanation": "Contraindicated in symptomatic severe AS."
+    },
+    {
+     "label": "B",
+     "text": "Repeat TTE in 6 mo",
+     "explanation": "Surveillance is for asymptomatic AS; symptoms change the plan."
+    },
+    {
+     "label": "C",
+     "text": "Start a beta-blocker",
+     "explanation": "Doesn't relieve the fixed valve obstruction."
+    },
+    {
+     "label": "D",
+     "text": "Start a statin to slow progression",
+     "explanation": "Doesn't relieve the fixed valve obstruction."
+    },
+    {
+     "label": "E",
+     "text": "Refer for aortic valve replacement",
+     "explanation": "Correct: symptomatic severe AS is a class I indication."
+    }
+   ],
+   "answer": "E",
+   "explanation": "Severe AS (velocity ≥4 m/s, mean gradient ≥40 mmHg) with exertional symptoms is a class I indication for valve replacement, surgical or transcatheter, chosen by a heart team. Untreated symptomatic severe AS has a poor prognosis, and exercise testing is contraindicated once symptoms are present.",
+   "references": [
+    {
+     "title": "When does asymptomatic aortic stenosis warrant surgery? (Cleveland Clinic Journal of Medicine)",
+     "url": "https://www.ccjm.org/content/83/4/271.full.txt",
+     "supports": "Symptomatic severe AS: class I for AVR; exercise testing contraindicated if symptomatic"
+    },
+    {
+     "title": "Treatment of symptomatic severe AS (J Am Heart Assoc, PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8475044",
+     "supports": "AVR for symptomatic severe AS is a Class I recommendation"
+    }
+   ],
+   "source": {
+    "book": "ACC/AHA Valvular Heart Disease Guideline (2020)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-05",
+   "system": "Respirology",
+   "topic": "Long-term oxygen criteria in COPD",
+   "kind": "guideline",
+   "tags": [
+    "guideline"
+   ],
+   "stem": "68M w/ COPD (FEV1 38% predicted), stable 6 wk after an exacerbation.\n\nRoom-air ABG: pH 7.40, PaCO2 46 mmHg, PaO2 57 mmHg\nHct 0.47\nNo edema; JVP normal; ECG normal",
+   "lead": "Most appropriate decision about home oxygen?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Continuous O2 ≥15 h/d",
+     "explanation": "Needs PaO2 ≤55, or 56–59 with cor pulmonale or polycythemia."
+    },
+    {
+     "label": "B",
+     "text": "Nocturnal O2 only",
+     "explanation": "Isolated nocturnal O2 hasn't been shown to improve survival here."
+    },
+    {
+     "label": "C",
+     "text": "No LTOT now; reassess periodically",
+     "explanation": "Correct: PaO2 57 without end-organ effects doesn't qualify."
+    },
+    {
+     "label": "D",
+     "text": "O2 titrated to SpO2 98–100%",
+     "explanation": "Overtreatment risks worsening hypercapnia in COPD."
+    },
+    {
+     "label": "E",
+     "text": "Ambulatory O2 for all exertion",
+     "explanation": "Not indicated on these resting results alone."
+    }
+   ],
+   "answer": "C",
+   "explanation": "LTOT improves survival in stable COPD when resting PaO2 is ≤55 mmHg (SpO2 ≤88%), or 56–59 mmHg with cor pulmonale, peripheral edema or polycythemia (Hct >55%). At PaO2 57 mmHg with none of these, he doesn't meet criteria, so reassess over time.",
+   "references": [
+    {
+     "title": "International guidelines for LTOT in stable COPD (Ontario HTA, PMC table)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3384376/table/A01tab04",
+     "supports": "GOLD, ATS-ERS and Ontario LTOT thresholds"
+    },
+    {
+     "title": "Long-term oxygen therapy in COPD: evidences and open questions (Monaldi Archives)",
+     "url": "https://monaldi-archives.org/macd/article/download/311/299/611",
+     "supports": "Survival benefit only in severe chronic hypoxemia criteria"
+    }
+   ],
+   "source": {
+    "book": "GOLD 2025 / Ontario LTOT criteria"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-06",
+   "system": "Respirology",
+   "topic": "Age-adjusted D-dimer for PE",
+   "kind": "investigation",
+   "tags": [
+    "investigation"
+   ],
+   "stem": "72F w/ 2d of mild pleuritic chest pain. No hemoptysis, leg swelling, recent surgery or cancer.\n\nHR 88, BP 136/80, SpO2 96% RA.\nWells: PE unlikely\nD-dimer 640 µg/L FEU (lab cutoff 500)",
+   "lead": "Most appropriate next step?",
+   "options": [
+    {
+     "label": "A",
+     "text": "CTPA",
+     "explanation": "Unneeded: D-dimer is below her age-adjusted cutoff."
+    },
+    {
+     "label": "B",
+     "text": "No further PE testing",
+     "explanation": "Correct: her age-adjusted cutoff is 720 µg/L (72 × 10)."
+    },
+    {
+     "label": "C",
+     "text": "V/Q scan",
+     "explanation": "Imaging is unnecessary once PE is excluded by D-dimer."
+    },
+    {
+     "label": "D",
+     "text": "Empiric anticoagulation pending imaging",
+     "explanation": "PE is excluded; this adds only bleeding risk."
+    },
+    {
+     "label": "E",
+     "text": "Bilateral leg compression US",
+     "explanation": "No DVT signs, and PE is already excluded."
+    }
+   ],
+   "answer": "B",
+   "explanation": "In patients >50 with non-high pretest probability, use an age-adjusted D-dimer cutoff of age × 10 µg/L. In ADJUST-PE, PE was safely excluded below this threshold (3-month VTE rate 0.3%), sparing many older patients CT. The formula assumes an assay reported in FEU with a 500 µg/L cutoff.",
+   "references": [
+    {
+     "title": "Age-adjusted D-dimer cutoff levels to rule out PE: ADJUST-PE (ACC journal scan)",
+     "url": "https://www.acc.org/Latest-in-Cardiology/Journal-Scans/2014/03/18/15/54/Age-Adjusted-DDimer-Cutoff-Levels-to-Rule-Out-Pulmonary",
+     "supports": "Age × 10 cutoff in ≥50; failure rate 0.3%"
+    },
+    {
+     "title": "Age-adjusted D-dimer to exclude PE (Washington University EM)",
+     "url": "https://emergencymedicine.wustl.edu/items/age-adjusted-d-dimer-to-exclude-pulmonary-embolism/",
+     "supports": "Formula assumes FEU assay with 500 µg/L cutoff"
+    }
+   ],
+   "source": {
+    "book": "ADJUST-PE (JAMA 2014)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-07",
+   "system": "Respirology",
+   "topic": "Light's criteria",
+   "kind": "investigation",
+   "tags": [
+    "investigation"
+   ],
+   "stem": "66M w/ new right pleural effusion. Diagnostic thoracentesis:\n\nPleural protein 28 g/L; serum protein 70 g/L\nPleural LDH 190 U/L; serum LDH 210 U/L\nSerum LDH upper limit of normal 250 U/L",
+   "lead": "Correct interpretation?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Transudate: protein ratio is below 0.5",
+     "explanation": "One criterion is enough, and the LDH criteria are met."
+    },
+    {
+     "label": "B",
+     "text": "Transudate: pleural LDH is below serum LDH",
+     "explanation": "Not a Light's criterion; the LDH ratio of 0.90 exceeds 0.6."
+    },
+    {
+     "label": "C",
+     "text": "Indeterminate: needs an albumin gradient",
+     "explanation": "Not needed; the effusion already meets exudate criteria."
+    },
+    {
+     "label": "D",
+     "text": "Exudate: protein ratio is above 0.5",
+     "explanation": "The protein ratio is 0.40, below 0.5."
+    },
+    {
+     "label": "E",
+     "text": "Exudate: meets the LDH criteria",
+     "explanation": "Correct: LDH ratio 0.90, and pleural LDH > two-thirds of the ULN."
+    }
+   ],
+   "answer": "E",
+   "explanation": "Light's criteria call an effusion exudative if ANY one is met: protein ratio >0.5, LDH ratio >0.6, or pleural LDH >2/3 of the serum ULN. Here both LDH criteria are met despite a protein ratio of 0.40. The criteria are about 98% sensitive for exudates, so false exudates (e.g., diuresed HF) are the main pitfall.",
+   "references": [
+    {
+     "title": "Light's criteria table, McMaster Textbook of Internal Medicine",
+     "url": "https://empendium.com/mcmtextbook/table/031_3492",
+     "supports": "Criteria, ≥1 needed; sensitivity 98%, specificity 83%"
+    },
+    {
+     "title": "Light's Criteria for Exudative Effusions (MDCalc)",
+     "url": "https://www.mdcalc.com/calc/797/lights-criteria-exudative-effusions",
+     "supports": "At least one criterion defines an exudate"
+    }
+   ],
+   "source": {
+    "book": "McMaster Textbook of Internal Medicine"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-08",
+   "system": "Respirology",
+   "topic": "Outpatient CAP in a healthy adult",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "38M w/ 3d of fever and productive cough. No comorbidities, no recent Abx or hospitalization.\n\nT 38.4, HR 98, RR 20, BP 124/76, SpO2 95% RA.\nCXR: RLL consolidation\nCURB-65: 0",
+   "lead": "Most appropriate empiric Tx?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Amoxicillin 1 g PO TID",
+     "explanation": "Correct: first-line for healthy outpatients (strong recommendation)."
+    },
+    {
+     "label": "B",
+     "text": "Levofloxacin",
+     "explanation": "Reserved for outpatients with comorbidities or beta-lactam issues."
+    },
+    {
+     "label": "C",
+     "text": "Amoxicillin-clavulanate plus azithromycin",
+     "explanation": "Combination therapy is for outpatients with comorbidities."
+    },
+    {
+     "label": "D",
+     "text": "Ceftriaxone IV",
+     "explanation": "Parenteral therapy is unnecessary for a low-risk outpatient."
+    },
+    {
+     "label": "E",
+     "text": "Ciprofloxacin",
+     "explanation": "Poor pneumococcal coverage; not a respiratory fluoroquinolone."
+    }
+   ],
+   "answer": "A",
+   "explanation": "For healthy outpatients without comorbidities or resistance risk factors, ATS/IDSA recommends amoxicillin 1 g TID; doxycycline is an alternative, and macrolide monotherapy only where pneumococcal macrolide resistance is <25%. Routine sputum and blood cultures aren't needed in outpatients.",
+   "references": [
+    {
+     "title": "ATS/IDSA publishes clinical guideline on community acquired pneumonia (ATS release, EurekAlert)",
+     "url": "https://www.eurekalert.org/news-releases/902541",
+     "supports": "Amoxicillin 1 g TID for healthy outpatients; combination for comorbidities; no routine cultures"
+    },
+    {
+     "title": "Updated CAP guideline (ACP Internist)",
+     "url": "https://immattersacp.org/weekly/archives/2019/10/08/4.htm",
+     "supports": "Amoxicillin or doxycycline for healthy outpatients"
+    }
+   ],
+   "source": {
+    "book": "ATS/IDSA CAP Guideline (2019)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-09",
+   "system": "Endocrinology",
+   "topic": "Severe hypercalcemia: initial step",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "71M w/ known squamous cell lung cancer, 4d of confusion, polyuria and constipation.\n\nBP 104/62, HR 108; dry mucous membranes.\nCorrected Ca 3.7 mmol/L\nCr 165 µmol/L (baseline 90)\nPTH suppressed",
+   "lead": "Most appropriate initial step?",
+   "options": [
+    {
+     "label": "A",
+     "text": "IV furosemide",
+     "explanation": "Not routine; consider only for volume overload after rehydration."
+    },
+    {
+     "label": "B",
+     "text": "Prednisone 40 mg daily",
+     "explanation": "Useful for vitamin D–mediated causes, not this one."
+    },
+    {
+     "label": "C",
+     "text": "Cinacalcet",
+     "explanation": "Targets PTH-mediated disease; PTH is suppressed."
+    },
+    {
+     "label": "D",
+     "text": "IV normal saline bolus, then infusion",
+     "explanation": "Correct: correct volume depletion and promote calciuresis first."
+    },
+    {
+     "label": "E",
+     "text": "Urgent hemodialysis",
+     "explanation": "Reserved for very severe or refractory cases."
+    }
+   ],
+   "answer": "D",
+   "explanation": "Severe hypercalcemia causes volume depletion, so start with isotonic saline (bolus, then infusion targeting urine output of 100–150 mL/h). Then give an antiresorptive, usually IV zoledronic acid adjusted for renal function, ± calcitonin as a rapid bridge, since bisphosphonates take 2–3 days to act.",
+   "references": [
+    {
+     "title": "Treatment of hypercalcemia of malignancy (Endocrinol Metab Clin N Am review)",
+     "url": "https://www.aub.edu.lb/fm/CaMOP/publications/Treatment-of-Hypercalcemia-malignancy.pdf",
+     "supports": "Hydration first; zoledronic acid first-line; onset 2–3 d; dialysis for very severe"
+    },
+    {
+     "title": "Severe hypercalcemia in a 54-year-old woman (Cleveland Clinic Journal of Medicine)",
+     "url": "https://www.mdedge.com/content/severe-hypercalcemia-54-year-old-woman/page/0/2",
+     "supports": "Initial IV isotonic fluids, then zoledronic acid"
+    }
+   ],
+   "source": {
+    "book": "Endocrinology & Metabolism Clinics review (2021)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-10",
+   "system": "Endocrinology",
+   "topic": "T2DM with ASCVD: cardioprotective agent",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "63M w/ T2DM x8y and MI 2y ago. On metformin, ASA, atorvastatin, ramipril and bisoprolol.\n\nBMI 31\nHbA1c 6.8%\neGFR 78",
+   "lead": "Most appropriate diabetes management?",
+   "options": [
+    {
+     "label": "A",
+     "text": "No change; HbA1c is at target",
+     "explanation": "Cardiorenal-protective agents can be used in ASCVD even at target."
+    },
+    {
+     "label": "B",
+     "text": "Add gliclazide",
+     "explanation": "No proven CV benefit; adds hypoglycemia and weight gain."
+    },
+    {
+     "label": "C",
+     "text": "Add empagliflozin",
+     "explanation": "Correct: an SGLT2i with proven CV benefit."
+    },
+    {
+     "label": "D",
+     "text": "Add sitagliptin",
+     "explanation": "DPP-4 inhibitors are CV-neutral."
+    },
+    {
+     "label": "E",
+     "text": "Start basal insulin",
+     "explanation": "Not needed at this HbA1c, with no CV benefit."
+    }
+   ],
+   "answer": "C",
+   "explanation": "Diabetes Canada (2020 update) advises that people with ASCVD, heart failure or CKD can receive a GLP-1 RA or SGLT2 inhibitor with proven cardiorenal benefit even when A1C is at target, by addition or substitution. Empagliflozin, or a GLP-1 RA such as semaglutide, would both fit here.",
+   "references": [
+    {
+     "title": "Pharmacologic Glycemic Management of T2DM in Adults: 2020 Update, The User's Guide (Diabetes Canada)",
+     "url": "https://www.diabetes.ca/chapter-13-user-guide",
+     "supports": "Cardiorenal agents for ASCVD, HF or CKD even if A1C at target"
+    },
+    {
+     "title": "Diabetes Canada guideline summary (Saskatchewan)",
+     "url": "https://publications.saskatchewan.ca/api/v1/products/129438/formats/155944/download",
+     "supports": "GLP-1 RA or SGLT2i with CV benefit in ASCVD"
+    }
+   ],
+   "source": {
+    "book": "Diabetes Canada Pharmacologic Management of T2DM (2020 update)"
+   },
+   "review": {
+    "verdict": "revise",
+    "issues": [
+     "Explanation and source attribute the recommendation to a 2024 update, but the cited Diabetes Canada page is the 2020 update user's guide."
+    ]
+   }
+  },
+  {
+   "id": "im-261029-11",
+   "system": "Gastroenterology",
+   "topic": "Upper GI bleed: timing of endoscopy",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "61M w/ melena x1d. On naproxen for OA.\n\nAfter 2 L crystalloid: BP 118/72, HR 92.\nHb 96 g/L\nGlasgow-Blatchford score 9\nIV pantoprazole started",
+   "lead": "Optimal timing of endoscopy?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Within 2 h",
+     "explanation": "Not required once he's been resuscitated and is stable."
+    },
+    {
+     "label": "B",
+     "text": "Within 24 h",
+     "explanation": "Correct: consensus timing for acute upper GI bleeding."
+    },
+    {
+     "label": "C",
+     "text": "Within 72 h",
+     "explanation": "Too late for a high-risk upper GI bleed."
+    },
+    {
+     "label": "D",
+     "text": "Only if he rebleeds",
+     "explanation": "He needs endoscopy for diagnosis and hemostasis."
+    },
+    {
+     "label": "E",
+     "text": "After 48 h of IV PPI",
+     "explanation": "PPI doesn't replace early endoscopy."
+    }
+   ],
+   "answer": "B",
+   "explanation": "The International Consensus Group (Barkun et al., 2019) suggests endoscopy within 24 hours of presentation for acute upper GI bleeding, after resuscitation. The same guideline suggests transfusing at Hb <80 g/L in patients without cardiovascular disease, with a higher threshold for those with it.",
+   "references": [
+    {
+     "title": "Management of Nonvariceal UGIB: International Consensus Group (Ann Intern Med 2019, via CAG)",
+     "url": "https://www.Cag-acg.Org/images/publications/CAG-CPG-Nonvariceal-UGIB-Annals-Dec2019.pdf",
+     "supports": "Endoscopy within 24 h; Hb threshold <80 g/L without CVD"
+    }
+   ],
+   "source": {
+    "book": "International Consensus on Nonvariceal UGIB (2019)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-12",
+   "system": "Hepatology",
+   "topic": "SBP: antibiotics plus albumin",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "56M w/ alcohol-related cirrhosis and ascites p/w abdominal discomfort and new confusion.\n\nT 37.9, BP 108/64.\nCr 128 µmol/L (baseline 80)\nBili 70 µmol/L\nAscitic fluid: neutrophils 0.6 × 10⁹/L; Gram stain negative",
+   "lead": "Most appropriate Tx?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Ceftriaxone alone",
+     "explanation": "Right antibiotic, but omits albumin."
+    },
+    {
+     "label": "B",
+     "text": "Large-volume paracentesis with albumin",
+     "explanation": "Doesn't treat the infection."
+    },
+    {
+     "label": "C",
+     "text": "Oral ciprofloxacin",
+     "explanation": "Used for SBP prophylaxis, not active infection."
+    },
+    {
+     "label": "D",
+     "text": "Repeat paracentesis in 48 h, then treat",
+     "explanation": "Neutrophils >0.25 × 10⁹/L already diagnose SBP; treat now."
+    },
+    {
+     "label": "E",
+     "text": "Ceftriaxone plus IV albumin",
+     "explanation": "Correct: albumin 1.5 g/kg on day 1 and 1 g/kg on day 3."
+    }
+   ],
+   "answer": "E",
+   "explanation": "Ascitic neutrophils >0.25 × 10⁹/L diagnose SBP. Treat with IV ceftriaxone or cefotaxime for at least 5 days, plus albumin 1.5 g/kg on day 1 and 1 g/kg on day 3, which lowers the risk of hepatorenal syndrome and improves survival. Hold nonselective beta-blockers if MAP <65.",
+   "references": [
+    {
+     "title": "Spontaneous Bacterial Peritonitis (Merck Manual Professional, Canada)",
+     "url": "https://www.merckmanuals.com/en-ca/professional/hepatic-and-biliary-disorders/approach-to-the-patient-with-liver-disease/spontaneous-bacterial-peritonitis-sbp",
+     "supports": "PMN >250 diagnostic; antibiotics; prophylaxis with quinolones"
+    },
+    {
+     "title": "Spontaneous Bacterial Peritonitis (Merck Manual Professional)",
+     "url": "https://www.merckmanuals.com/professional/hepatic-and-biliary-disorders/approach-to-the-patient-with-liver-disease/spontaneous-bacterial-peritonitis-sbp",
+     "supports": "Albumin 1.5 g/kg day 1 and 1 g/kg day 3; hold NSBB if MAP <65"
+    }
+   ],
+   "source": {
+    "book": "AASLD Ascites/SBP/HRS Practice Guidance (2021)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-13",
+   "system": "Hematology",
+   "topic": "Dabigatran reversal",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "78F on dabigatran 110 mg BID for AF (last dose 6 h ago) p/w headache and new left hemiparesis.\n\nGCS 13, BP 168/92.\nCT head: right intracerebral hemorrhage\nCr 98 µmol/L",
+   "lead": "Best anticoagulant reversal?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Idarucizumab 5 g IV",
+     "explanation": "Correct: specific antidote for dabigatran."
+    },
+    {
+     "label": "B",
+     "text": "Andexanet alfa",
+     "explanation": "Reverses factor Xa inhibitors, not dabigatran."
+    },
+    {
+     "label": "C",
+     "text": "Vitamin K 10 mg IV",
+     "explanation": "Reverses warfarin; no effect on dabigatran."
+    },
+    {
+     "label": "D",
+     "text": "Protamine sulfate",
+     "explanation": "Reverses heparin, not dabigatran."
+    },
+    {
+     "label": "E",
+     "text": "Frozen plasma",
+     "explanation": "Not an effective reversal strategy for dabigatran."
+    }
+   ],
+   "answer": "A",
+   "explanation": "Idarucizumab is a monoclonal antibody fragment that binds dabigatran with about 350 times its affinity for thrombin, reversing it within minutes. Thrombosis Canada recommends it for severe or life-threatening bleeding, or urgent surgery, in patients taking dabigatran.",
+   "references": [
+    {
+     "title": "Idarucizumab for dabigatran reversal (Can J Hosp Pharm, PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5085331/",
+     "supports": "Mechanism, rapid reversal, Thrombosis Canada recommendation"
+    },
+    {
+     "title": "Safety of idarucizumab at six Ontario hospitals (RPTH, PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8348998",
+     "supports": "Approved in Canada 2016 for dabigatran reversal"
+    }
+   ],
+   "source": {
+    "book": "Thrombosis Canada Clinical Guide: DOAC bleeding management"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-14",
+   "system": "Hematology",
+   "topic": "Duration after surgery-provoked VTE",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "46M had a proximal DVT 3 wk after elective total knee arthroplasty. Treated with apixaban for 3 mo; now asymptomatic. No prior VTE, cancer or family history of VTE.",
+   "lead": "Most appropriate next step?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Thrombophilia testing to guide duration",
+     "explanation": "ASH suggests against it after surgery-provoked VTE."
+    },
+    {
+     "label": "B",
+     "text": "Continue apixaban 5 mg BID indefinitely",
+     "explanation": "Recurrence risk is low after a transient major risk factor."
+    },
+    {
+     "label": "C",
+     "text": "Switch to apixaban 2.5 mg BID indefinitely",
+     "explanation": "Extended therapy isn't needed after transient-provoked VTE."
+    },
+    {
+     "label": "D",
+     "text": "Stop anticoagulation",
+     "explanation": "Correct: 3-month primary treatment is complete."
+    },
+    {
+     "label": "E",
+     "text": "Switch to ASA 81 mg indefinitely",
+     "explanation": "Not indicated after a transient-provoked VTE."
+    }
+   ],
+   "answer": "D",
+   "explanation": "VTE provoked by a major transient risk factor such as surgery is treated for a primary course of about 3 months and then stopped, because recurrence risk is low. ASH suggests not testing for thrombophilia to decide duration in surgery-provoked VTE. Unprovoked VTE, by contrast, usually warrants indefinite therapy if bleeding risk allows.",
+   "references": [
+    {
+     "title": "ASH VTE and thrombophilia teaching slide set (American Society of Hematology)",
+     "url": "https://www.hematology.org/-/media/hematology/files/clinicians/guidelines/ashteaching-slide-setvtethrombophiliapdffinal121123.pdf",
+     "supports": "Surgery-provoked VTE: treat 3 months and stop; no thrombophilia testing"
+    },
+    {
+     "title": "ASH 2020 VTE treatment recommendations (summary)",
+     "url": "https://docquity.com/articles/management-of-venous-thromboembolism-recommendations-from-the-american-society-of-hematology-2020-guidelines",
+     "supports": "Short primary course for transient risk factor; indefinite for unprovoked"
+    }
+   ],
+   "source": {
+    "book": "ASH VTE Guidelines (2020, thrombophilia 2023)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-15",
+   "system": "Infectious Disease",
+   "topic": "First episode of C. difficile",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "67F on day 6 of ceftriaxone for pyelonephritis develops 5 watery stools/d.\n\nT 37.8, BP 128/74.\nWBC 12.4 × 10⁹/L\nCr 84 µmol/L\nC. difficile toxin: positive",
+   "lead": "Preferred Tx?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Oral metronidazole",
+     "explanation": "Only if fidaxomicin and oral vancomycin are unavailable."
+    },
+    {
+     "label": "B",
+     "text": "IV metronidazole",
+     "explanation": "Only an adjunct in fulminant CDI."
+    },
+    {
+     "label": "C",
+     "text": "Oral fidaxomicin",
+     "explanation": "Correct: preferred by IDSA/SHEA 2021 for an initial episode."
+    },
+    {
+     "label": "D",
+     "text": "IV vancomycin",
+     "explanation": "Doesn't reach the colonic lumen."
+    },
+    {
+     "label": "E",
+     "text": "Fecal microbiota transplantation",
+     "explanation": "Reserved for multiply recurrent CDI."
+    }
+   ],
+   "answer": "C",
+   "explanation": "For an initial CDI episode, whether non-severe or severe, IDSA/SHEA 2021 prefers fidaxomicin because of lower recurrence, with oral vancomycin an acceptable alternative. Metronidazole is used only if neither is available. This episode is non-severe (WBC <15 × 10⁹/L, Cr <133 µmol/L).",
+   "references": [
+    {
+     "title": "C. difficile treatment across IDSA/SHEA, ESCMID and ASID guidelines (PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9780550/",
+     "supports": "Fidaxomicin preferred; vancomycin alternative; metronidazole only if unavailable"
+    },
+    {
+     "title": "IDSA and ACG release C. difficile guidelines (APhA)",
+     "url": "https://www.pharmacist.com/Blogs/CEO-Blog/idsa-and-acg-release-c-difficile-guidelines",
+     "supports": "Fidaxomicin preferred by IDSA/SHEA; vancomycin alternative"
+    }
+   ],
+   "source": {
+    "book": "IDSA/SHEA C. difficile Focused Update (2021)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-16",
+   "system": "Infectious Disease",
+   "topic": "Empiric therapy for bacterial meningitis over 50",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "68M w/ 1d of fever, headache, neck stiffness and confusion. No focal deficits or papilledema. Blood cultures drawn.\n\nT 39.2, HR 112, BP 128/70.\nGCS 13",
+   "lead": "Most appropriate empiric Tx now?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Ceftriaxone + vancomycin",
+     "explanation": "Misses Listeria, a concern after age 50."
+    },
+    {
+     "label": "B",
+     "text": "Ceftriaxone + vancomycin + ampicillin + dexamethasone",
+     "explanation": "Correct: covers Listeria; steroid with first dose."
+    },
+    {
+     "label": "C",
+     "text": "Ceftriaxone + ampicillin + dexamethasone",
+     "explanation": "Omits vancomycin for possible resistant pneumococcus."
+    },
+    {
+     "label": "D",
+     "text": "Ceftriaxone + vancomycin + ampicillin",
+     "explanation": "Omits dexamethasone, which reduces mortality in pneumococcal meningitis."
+    },
+    {
+     "label": "E",
+     "text": "Meropenem + dexamethasone",
+     "explanation": "Not the standard empiric regimen for community-acquired meningitis."
+    }
+   ],
+   "answer": "B",
+   "explanation": "Adults >50 need ampicillin added to vancomycin + ceftriaxone to cover Listeria. Give dexamethasone 0.15 mg/kg (max 10 mg) IV q6h, starting before or with the first antibiotic dose. Never delay antibiotics for CT or LP, and with confusion add empiric acyclovir if HSV encephalitis is possible.",
+   "references": [
+    {
+     "title": "Bacterial meningitis (Hamilton Health Sciences ID Handbook)",
+     "url": "https://idhandbook.hamiltonhealthsciences.ca/documents/bacterial-meningitis/",
+     "supports": "Over 50: ceftriaxone + vancomycin + ampicillin; dexamethasone before or with first dose"
+    },
+    {
+     "title": "Acute community-acquired bacterial meningitis in adults (Cleveland Clinic Journal of Medicine)",
+     "url": "https://www.mdedge.com/ccjm/article/95751/infectious-diseases/acute-community-acquired-bacterial-meningitis-adults-evidence/page/0/3",
+     "supports": "Ampicillin for Listeria over 50; dexamethasone benefit; start therapy early"
+    }
+   ],
+   "source": {
+    "book": "IDSA Bacterial Meningitis Guideline (via Hamilton Health Sciences ID Handbook)"
+   },
+   "review": {
+    "verdict": "revise",
+    "issues": [
+     "Hamilton handbook advises empiric acyclovir whenever HSV encephalitis is possible; this patient is confused. Keyed answer stays best among options, but the explanation should mention it."
+    ]
+   }
+  },
+  {
+   "id": "im-261029-17",
+   "system": "Neurology",
+   "topic": "Thrombolysis in acute ischemic stroke",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "66M w/ sudden right hemiparesis and aphasia; last known well 2.5 h ago. No anticoagulants.\n\nBP 172/94, glucose 7.1 mmol/L.\nNIHSS 12\nNon-contrast CT: no hemorrhage",
+   "lead": "Most appropriate next step?",
+   "options": [
+    {
+     "label": "A",
+     "text": "ASA 160 mg now",
+     "explanation": "Doesn't reperfuse an eligible patient."
+    },
+    {
+     "label": "B",
+     "text": "IV heparin infusion",
+     "explanation": "No role in acute ischemic stroke treatment."
+    },
+    {
+     "label": "C",
+     "text": "Lower BP to <140/90 before treating",
+     "explanation": "Unnecessary; his BP is acceptable for thrombolysis."
+    },
+    {
+     "label": "D",
+     "text": "MRI brain to confirm infarct first",
+     "explanation": "Delays treatment; CT excluding hemorrhage is enough."
+    },
+    {
+     "label": "E",
+     "text": "IV tenecteplase 0.25 mg/kg (max 25 mg)",
+     "explanation": "Correct: eligible, disabling stroke within 4.5 h."
+    }
+   ],
+   "answer": "E",
+   "explanation": "Eligible patients with disabling ischemic stroke within 4.5 h of last known well should receive IV thrombolysis. Canadian Stroke Best Practices (2022) endorse tenecteplase 0.25 mg/kg (max 25 mg) as an alternative to alteplase, based largely on the Canadian AcT trial. With aphasia and NIHSS 12, also screen urgently for thrombectomy.",
+   "references": [
+    {
+     "title": "Tenecteplase for acute ischemic stroke (CMAJ 2026)",
+     "url": "https://www.cmaj.ca/content/198/10/E369",
+     "supports": "CSBPR 2022: tenecteplase 0.25 mg/kg (max 25 mg) within 4.5 h; AcT trial"
+    },
+    {
+     "title": "Key changes to the 2022 CSBPR Acute Stroke Management (CorHealth Ontario)",
+     "url": "https://devcorh.corhealthontario.ca/Key-Changes-to-the-2022-Acute-Stroke-Management-Canadian-Stroke-Best-Practice-Recommendations-(CSBPR)-FINAL-Version.pdf",
+     "supports": "Tenecteplase as alternative to alteplase within 4.5 h"
+    }
+   ],
+   "source": {
+    "book": "Canadian Stroke Best Practice Recommendations (2022)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-18",
+   "system": "Neurology",
+   "topic": "Benzodiazepine-refractory status epilepticus",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "45F w/ epilepsy has a generalized tonic-clonic seizure lasting 12 min. She has received lorazepam 4 mg IV twice, 5 min apart, and is still seizing.\n\nGlucose 6.2 mmol/L\nSpO2 94% on O2",
+   "lead": "Next best Tx?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Levetiracetam 60 mg/kg IV (max 4500 mg)",
+     "explanation": "Correct: a second-line agent after adequate benzodiazepines."
+    },
+    {
+     "label": "B",
+     "text": "Third dose of lorazepam",
+     "explanation": "More benzodiazepine adds respiratory depression with less benefit."
+    },
+    {
+     "label": "C",
+     "text": "Propofol infusion with intubation",
+     "explanation": "Third-line, after a second-line agent fails."
+    },
+    {
+     "label": "D",
+     "text": "IV magnesium sulfate",
+     "explanation": "Treats eclamptic seizures, not epilepsy-related status."
+    },
+    {
+     "label": "E",
+     "text": "Observe 10 min for spontaneous termination",
+     "explanation": "Seizures beyond 5 min need escalation."
+    }
+   ],
+   "answer": "A",
+   "explanation": "When status persists after adequate benzodiazepine dosing, give one second-line agent: levetiracetam, fosphenytoin or valproate, which were equally effective in ESETT (about 50% seizure cessation). Levetiracetam is often preferred for rapid infusion and few interactions. If seizures continue, move to anesthetic infusions.",
+   "references": [
+    {
+     "title": "Status Epilepticus, Episode 133 (Emergency Medicine Cases)",
+     "url": "https://emergencymedicinecases.com/wp-content/uploads/2019/12/Episode-133-Status-Epilepticus-1.pdf",
+     "supports": "Benzodiazepine first; second-line levetiracetam 60 mg/kg, fosphenytoin or valproate; ESETT"
+    },
+    {
+     "title": "Seizure/status epilepticus pathway (OHSU Doernbecher)",
+     "url": "https://www.ohsu.edu/sites/default/files/2022-02/DCH%20ED%20Seizure-Status%20Epilepticus-Clinical-Pathway_January2022.pdf",
+     "supports": "Extra benzodiazepine doses add respiratory depression, less likely to stop seizures"
+    }
+   ],
+   "source": {
+    "book": "AES Status Epilepticus Guideline (2016) / ESETT"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-19",
+   "system": "Nephrology",
+   "topic": "Hyperkalemia with ECG changes",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "72M w/ CKD on ramipril and spironolactone p/w weakness.\n\nHR 52, BP 118/70.\nK 7.1 mmol/L (non-hemolyzed)\nECG: peaked T waves, wide QRS",
+   "lead": "Most appropriate first step?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Insulin 10 units IV with dextrose",
+     "explanation": "Needed next, after membrane stabilization."
+    },
+    {
+     "label": "B",
+     "text": "IV sodium bicarbonate",
+     "explanation": "Mainly for coexisting acidosis; doesn't stabilize the myocardium."
+    },
+    {
+     "label": "C",
+     "text": "Sodium zirconium cyclosilicate",
+     "explanation": "Removes K over hours; too slow as the first step."
+    },
+    {
+     "label": "D",
+     "text": "IV calcium gluconate",
+     "explanation": "Correct: stabilizes the cardiac membrane within minutes."
+    },
+    {
+     "label": "E",
+     "text": "Urgent hemodialysis",
+     "explanation": "Definitive, but takes time to arrange; stabilize first."
+    }
+   ],
+   "answer": "D",
+   "explanation": "With ECG changes, give IV calcium first: it stabilizes the cardiac membrane within minutes but doesn't lower K, and may need repeating if ECG changes persist. Then shift K into cells (insulin with dextrose, salbutamol) and remove it (binders, diuretics or dialysis). Stop the ramipril and spironolactone.",
+   "references": [
+    {
+     "title": "Adult acute hyperkalemia management reference (Munson Healthcare)",
+     "url": "https://www.munsonhealthcare.org/media/file/Physician%20Services/Clinical%20Resources/Adult%20Acute%20Hyperkalemia%20Management%20Reference%20Text.pdf",
+     "supports": "IV calcium immediately with ECG changes; doesn't lower K; KDIGO severity"
+    },
+    {
+     "title": "Management of hyperkalaemia in adults (South Eastern Sydney LHD)",
+     "url": "https://www.seslhd.health.nsw.gov.au/sites/default/files/documents/ManagementofHyperkalaemiainAdults.pdf",
+     "supports": "Calcium stabilizes membranes; short-lived; repeat if ECG changes persist"
+    }
+   ],
+   "source": {
+    "book": "KDIGO 2018 hyperkalemia conference / hospital protocols"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "im-261029-20",
+   "system": "Rheumatology",
+   "topic": "GCA with visual symptoms",
+   "kind": "management",
+   "tags": [
+    "management"
+   ],
+   "stem": "74F w/ 2 wk of new temporal headache and jaw claudication. Today, transient monocular vision loss lasting 10 min.\n\nESR 88 mm/h\nCRP 64 mg/L\nTender temporal artery w/ reduced pulse",
+   "lead": "Most appropriate next step?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Temporal artery biopsy, then steroids if positive",
+     "explanation": "Never delay steroids; biopsy remains useful for about 2 wk."
+    },
+    {
+     "label": "B",
+     "text": "Prednisone 15 mg daily",
+     "explanation": "A PMR-level dose; far too low for GCA."
+    },
+    {
+     "label": "C",
+     "text": "IV methylprednisolone 500–1000 mg daily x3 d",
+     "explanation": "Correct: pulse steroids for threatened vision."
+    },
+    {
+     "label": "D",
+     "text": "Tocilizumab alone",
+     "explanation": "A steroid-sparing add-on, not initial monotherapy."
+    },
+    {
+     "label": "E",
+     "text": "Temporal artery US before treating",
+     "explanation": "Don't delay treatment for imaging."
+    }
+   ],
+   "answer": "C",
+   "explanation": "Suspected GCA with visual symptoms is an emergency: start IV pulse methylprednisolone immediately (ACR/VF 2021 favours IV pulse when vision is threatened), then high-dose oral prednisone. Arrange temporal artery biopsy, ideally within 2 weeks of starting steroids, and urgent ophthalmology review.",
+   "references": [
+    {
+     "title": "ACR/Vasculitis Foundation guideline for GCA and Takayasu arteritis (RheumNow)",
+     "url": "https://rheumnow.com/news/acrvasculitis-foundation-guideline-giant-cell-arteritis-and-takayasu-arteritis",
+     "supports": "IV pulse glucocorticoids for threatened vision; biopsy within 2 weeks of starting steroids"
+    },
+    {
+     "title": "Giant cell arteritis (Emergency Care BC)",
+     "url": "https://emergencycarebc.ca/clinical_resource/giant-cell-arteritis",
+     "supports": "Visual loss: methylprednisolone 500–1000 mg daily x3 d, then prednisone 40–60 mg"
+    }
+   ],
+   "source": {
+    "book": "ACR/Vasculitis Foundation GCA Guideline (2021)"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  }
+ ],
+ "version": "2026-10-30 01:26",
+ "generator": {
+  "type": "de-novo-rcpsc-im",
+  "runs": [
+   {
+    "at": "2026-10-30 01:26",
+    "questions": 20,
+    "systems": {
+     "Cardiology": 4,
+     "Respirology": 4,
+     "Endocrinology": 2,
+     "Gastroenterology": 1,
+     "Hepatology": 1,
+     "Hematology": 2,
+     "Infectious Disease": 2,
+     "Neurology": 2,
+     "Nephrology": 1,
+     "Rheumatology": 1
+    }
+   }
+  ]
+ }
+}

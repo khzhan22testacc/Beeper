@@ -1,4 +1,4 @@
-# Pager
+# Beeper
 
 Offline internal medicine question bank, with each question shown on a pager screen. It's a static web app that runs offline and installs to the home screen on iPhone and Android.
 
@@ -27,6 +27,21 @@ Open it once while online so it caches for offline use.
 - **Settings → Spaced repetition:** on, questions you miss come back sooner and well-known ones less often. Off, questions are random with unseen ones first. No review dates are shown either way.
 - Question banks are added and removed in Settings.
 
+## Shared banks (auto-updating)
+
+Banks in the repo's `banks/` folder download to every phone automatically and update whenever the app opens online. No one has to load files.
+
+- `banks/index.json` lists the bank files to publish:
+
+      { "banks": ["rcpsc-im.json", "medical-trivia.json"] }
+
+- **Update a bank:** after a generation run, upload the new file to `banks/` with the same name (Add file → Upload files → commit). Phones pick it up next time they open the app online (it checks on launch, when the app comes back to the foreground after 30+ minutes, and with Settings → Check for updates). Progress and feedback are kept.
+- **Add a new bank:** upload the file to `banks/` and add its file name to `index.json` (open it on GitHub → pencil icon → edit → commit).
+- **Retire a bank:** remove its name from `index.json`. It disappears from phones; progress stays saved in case it returns.
+- The app never swaps questions mid-session: an update found during questions applies when the user goes back Home.
+- You don't need to bump `CACHE` in `sw.js` for bank updates, only for changes to the app itself.
+- **Only publish original content.** The de novo Royal College bank and the trivia bank are written from scratch with cited sources. Never put textbook-derived banks (e.g. Harrison's) or course material here: the repo and site are public. Those stay as personal files added on your own phone.
+
 ## Question bank format
 
 Same format the qbank generator skill produces, so its files load as is:
@@ -54,7 +69,7 @@ Setup, about 10 minutes:
 4. Copy the web app URL (ends in `/exec`) and paste it into `FEEDBACK_ENDPOINT` near the top of `app.js`.
 5. Bump `CACHE` in `sw.js` and upload to GitHub.
 
-To get a file for the generator's refine mode: reload the Sheet, then **Pager menu → Export feedback file**. It saves a JSON file to your Drive in the same format as the in-app export.
+To get a file for the generator's refine mode: reload the Sheet, then **Beeper menu → Export feedback file**. It saves a JSON file to your Drive in the same format as the in-app export.
 
 If you edit the script later, use **Deploy → Manage deployments → edit → New version** so the URL stays the same.
 
@@ -71,7 +86,7 @@ Settings → Backup exports progress and feedback. Import also accepts backups f
 ## Updating the app
 
 1. Change the files.
-2. In `sw.js`, bump `CACHE` (e.g. `pager-v1` → `pager-v2`). Also update `APP_VERSION` at the top of `app.js`.
+2. In `sw.js`, bump `CACHE` (e.g. `beeper-v6` → `beeper-v7`). Also update `APP_VERSION` at the top of `app.js`.
 3. Upload and commit. On the phone, open the app online, fully close it, and reopen.
 
 ## Credits

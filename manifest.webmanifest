@@ -1,6 +1,6 @@
 {
-  "name": "Pager",
-  "short_name": "Pager",
+  "name": "Beeper",
+  "short_name": "Beeper",
   "description": "Quick internal medicine questions you can answer on the go.",
   "start_url": "./",
   "scope": "./",

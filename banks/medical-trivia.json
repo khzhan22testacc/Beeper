@@ -1,0 +1,1091 @@
+{
+ "id": "medical-trivia",
+ "title": "Medical trivia",
+ "questions": [
+  {
+   "id": "trv-261029-01",
+   "system": "Psychiatry",
+   "topic": "7 Up as a lithiated soda",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "pop-culture"
+   ],
+   "stem": "For about its first two decades (1929 to around 1950), 7 Up was advertised as a \"____ lemon soda.\"",
+   "lead": "Which word filled the blank?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Bromated",
+     "explanation": "Bromide sedatives were common then, but not in 7 Up's name."
+    },
+    {
+     "label": "B",
+     "text": "Phosphated",
+     "explanation": "Phosphate sodas existed, but that wasn't 7 Up's pitch."
+    },
+    {
+     "label": "C",
+     "text": "Lithiated",
+     "explanation": "Correct: a nod to lithium, now a mood stabilizer."
+    },
+    {
+     "label": "D",
+     "text": "Quininated",
+     "explanation": "Quinine belongs to tonic water, not 7 Up."
+    }
+   ],
+   "answer": "C",
+   "explanation": "Psychiatric historian Edward Shorter notes 7 Up was sold as a \"lithiated lemon soda\" from its 1929 launch until 1950. John Cade's 1949 report later established lithium for mania, and its narrow therapeutic index still makes level monitoring essential.",
+   "references": [
+    {
+     "title": "Edward Shorter, Introduction to Lithium in psychiatry in historical perspective (INHN)",
+     "url": "https://inhn.org/legacy/IMAGES/SHORTER_LITHIUM_INTRODUCTION.PDF",
+     "supports": "7 Up advertised as lithiated lemon soda 1929 to 1950; Cade 1949"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-02",
+   "system": "Infectious Disease",
+   "topic": "S. anginosus group caramel odour",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "microbiology"
+   ],
+   "stem": "Microbiologists have long noticed that Streptococcus anginosus group cultures smell of caramel or butterscotch.",
+   "lead": "Which metabolite is responsible?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Diacetyl",
+     "explanation": "Correct: anginosus group strains make far more than other streptococci."
+    },
+    {
+     "label": "B",
+     "text": "Indole",
+     "explanation": "Classic for E. coli's indole test, not caramel."
+    },
+    {
+     "label": "C",
+     "text": "2-Aminoacetophenone",
+     "explanation": "That's Pseudomonas aeruginosa's grape-like smell."
+    },
+    {
+     "label": "D",
+     "text": "Trimethylamine",
+     "explanation": "The fishy odour of bacterial vaginosis."
+    }
+   ],
+   "answer": "A",
+   "explanation": "A 1992 study traced the caramel odour of the \"S. milleri\" (anginosus) group to diacetyl and suggested measuring it as a rapid presumptive ID test. Clinically, this group is notorious for abscesses, so a positive culture should send you looking for one.",
+   "references": [
+    {
+     "title": "Chew & Smith. Detection of diacetyl (caramel odor) in presumptive identification of the Streptococcus milleri group. J Clin Microbiol (PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC270577/?page=0",
+     "supports": "Caramel odour due to diacetyl; proposed as presumptive test"
+    },
+    {
+     "title": "Post-ablation Streptococcus anginosus bacteremia (Proceedings in Obstetrics and Gynecology)",
+     "url": "https://pubs.lib.uiowa.edu/pog/article/3472/galley/112378/view",
+     "supports": "Caramel/butterscotch odour; association with abscess formation"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-03",
+   "system": "Infectious Disease",
+   "topic": "Pseudomonas grape odour",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "microbiology"
+   ],
+   "stem": "A grape-like smell from culture plates and burn wounds has long been a clue to this organism. The odour comes from 2-aminoacetophenone.",
+   "lead": "Which organism?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Proteus mirabilis",
+     "explanation": "Famous for swarming across agar, not a grape smell."
+    },
+    {
+     "label": "B",
+     "text": "Pseudomonas aeruginosa",
+     "explanation": "Correct: it makes 2-aminoacetophenone from tryptophan."
+    },
+    {
+     "label": "C",
+     "text": "Clostridioides difficile",
+     "explanation": "Diagnosed by toxin testing, not a fruity smell."
+    },
+    {
+     "label": "D",
+     "text": "Staphylococcus aureus",
+     "explanation": "Golden colonies, but no grape odour."
+    }
+   ],
+   "answer": "B",
+   "explanation": "Pseudomonas aeruginosa produces 2-aminoacetophenone, the compound behind the grape-like odour of its cultures and infected burn wounds. A 1979 Journal of Clinical Microbiology paper identified the compound by mass spectroscopy and proposed using it to help identify the organism.",
+   "references": [
+    {
+     "title": "Cox & Parker. Use of 2-aminoacetophenone production in identification of Pseudomonas aeruginosa. J Clin Microbiol 1979 (PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC273058",
+     "supports": "Grapelike odour in culture and burn wounds; identified as 2-aminoacetophenone"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-04",
+   "system": "Hematology",
+   "topic": "Warfarin's name",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "pharmacology"
+   ],
+   "stem": "Warfarin grew out of a 1920s mystery: cattle bleeding to death after eating mouldy sweet clover hay. Its name honours the group that funded the research.",
+   "lead": "What does \"WARF\" stand for?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Western Anticoagulant Research Fund",
+     "explanation": "Not a real funder."
+    },
+    {
+     "label": "B",
+     "text": "Wellcome Agricultural Research Fellowship",
+     "explanation": "Not a real funder."
+    },
+    {
+     "label": "C",
+     "text": "Warren Animal Research Foundation",
+     "explanation": "Not a real funder."
+    },
+    {
+     "label": "D",
+     "text": "Wisconsin Alumni Research Foundation",
+     "explanation": "Correct: it funded Karl Paul Link's lab."
+    }
+   ],
+   "answer": "D",
+   "explanation": "Karl Paul Link's University of Wisconsin lab isolated dicoumarol from spoiled sweet clover, then made warfarin (WARF plus coumarin), first sold as rat poison. Years earlier, Frank Schofield of the Ontario Veterinary College had linked the bleeding cattle to mouldy sweet clover.",
+   "references": [
+    {
+     "title": "A Study in Scarlet, Distillations (Science History Institute)",
+     "url": "https://www.sciencehistory.org/distillations/magazine/a-study-in-scarlet",
+     "supports": "Link, WARF funding, name, rat poison, Schofield at Ontario Veterinary College"
+    },
+    {
+     "title": "How Moldy Hay And Sick Cows Led To A Lifesaving Drug (NPR)",
+     "url": "https://www.npr.org/sections/health-shots/2017/08/29/531749974/how-moldy-hay-and-sick-cows-led-to-a-life-saving-drug",
+     "supports": "Name is a mashup of WARF and coumarin"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-05",
+   "system": "Endocrinology",
+   "topic": "Exenatide and the Gila monster",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "pharmacology"
+   ],
+   "stem": "Exenatide, an early GLP-1 receptor agonist, is a synthetic version of exendin-4, a peptide John Eng isolated from an animal's saliva.",
+   "lead": "Which animal?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Komodo dragon",
+     "explanation": "Not the source of exendin-4."
+    },
+    {
+     "label": "B",
+     "text": "Gila monster",
+     "explanation": "Correct: a venomous lizard of the US Southwest."
+    },
+    {
+     "label": "C",
+     "text": "Cone snail",
+     "explanation": "Not the source of exendin-4."
+    },
+    {
+     "label": "D",
+     "text": "Platypus",
+     "explanation": "Not the source of exendin-4."
+    }
+   ],
+   "answer": "B",
+   "explanation": "Eng found exendin-4 in Gila monster saliva, and it closely resembles human GLP-1. There's a Toronto angle too: in the mid-1990s, Daniel Drucker's University of Toronto lab had a Gila monster flown into Pearson airport for its own GLP-1 research.",
+   "references": [
+    {
+     "title": "Gila monster saliva and exenatide, Endeavors (UNC)",
+     "url": "https://endeavors.unc.edu/fall2007/buse.php",
+     "supports": "Exendin-4 in Gila monster saliva, similar to GLP-1; exenatide is synthetic exendin-4"
+    },
+    {
+     "title": "Ozempic and a venomous lizard, Global News",
+     "url": "https://globalnews.ca/news/9793403/ozempic-canada-scientist-venomous-lizard-weight-loss",
+     "supports": "Drucker's U of T lab; Gila monster flown into Pearson; Eng named exenatide"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-06",
+   "system": "Gastroenterology",
+   "topic": "Marshall's H. pylori self-experiment",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "history"
+   ],
+   "stem": "In 1984, Barry Marshall drank a culture of Helicobacter pylori to show it causes gastritis. Beforehand, he took a drug in case stomach acid killed the bacteria.",
+   "lead": "Which drug?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Omeprazole",
+     "explanation": "A proton pump inhibitor, but not what Marshall reported taking."
+    },
+    {
+     "label": "B",
+     "text": "Sucralfate",
+     "explanation": "Coats ulcers rather than lowering acid."
+    },
+    {
+     "label": "C",
+     "text": "Cimetidine",
+     "explanation": "Correct: he \"pre-medicated\" with Tagamet, an H2 blocker."
+    },
+    {
+     "label": "D",
+     "text": "Bismuth subsalicylate",
+     "explanation": "Active against H. pylori, so it would have defeated the point."
+    }
+   ],
+   "answer": "C",
+   "explanation": "Marshall said he pre-medicated with Tagamet (cimetidine) before drinking the brew. He developed gastritis within days, and he and Robin Warren later shared the 2005 Nobel Prize for linking H. pylori to gastritis and peptic ulcer disease.",
+   "references": [
+    {
+     "title": "Marshall interview, The Biomedical Scientist (IBMS)",
+     "url": "https://thebiomedicalscientist.net/sites/default/files/media/document/2017/pages_from_bio_may17_20-23.pdf",
+     "supports": "Pre-medicated with Tagamet; late July 1984; Nobel 2005"
+    },
+    {
+     "title": "Marshall & Adams. Helicobacter pylori: A Nobel pursuit? Can J Gastroenterol (PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2661189",
+     "supports": "Self-ingestion in 1984; 2005 Nobel for H. pylori in gastritis and peptic ulcer disease"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-07",
+   "system": "Cardiology",
+   "topic": "Forssmann's self-catheterization",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "history"
+   ],
+   "stem": "In 1929, surgical trainee Werner Forssmann passed a catheter from his own arm vein into his heart, then walked to radiology to X-ray it.",
+   "lead": "His inspiration was an old engraving of the procedure being done on which animal?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Horse",
+     "explanation": "Correct: French physiologists catheterized a standing horse's heart."
+    },
+    {
+     "label": "B",
+     "text": "Dog",
+     "explanation": "He later experimented on dogs, but the engraving showed a horse."
+    },
+    {
+     "label": "C",
+     "text": "Sheep",
+     "explanation": "Not the animal in the engraving."
+    },
+    {
+     "label": "D",
+     "text": "Rabbit",
+     "explanation": "Not the animal in the engraving."
+    }
+   ],
+   "answer": "A",
+   "explanation": "Forssmann was inspired by Marey and Chauveau's 1861 experiments threading a tube through a horse's jugular vein into its heart. His stunt was derided at the time, yet he shared the 1956 Nobel Prize with Cournand and Richards for cardiac catheterization.",
+   "references": [
+    {
+     "title": "Meyers. The key in the lock, The Pharos (Alpha Omega Alpha)",
+     "url": "https://alphaomegaalpha.org/wp-content/uploads/2021/07/Meyers_Key.pdf",
+     "supports": "Inspired by Marey and Chauveau's 1861 horse catheterization; later dog experiments; derision"
+    },
+    {
+     "title": "Werner Forssmann, Biographical (NobelPrize.org)",
+     "url": "https://www.nobelprize.org/prizes/medicine/1956/forssmann/biographical/",
+     "supports": "1929 self-catheterization, walked to X-ray; 1956 prize"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "revise",
+    "issues": [
+     "Pharos describes the inspiration as an old engraving rather than a textbook sketch"
+    ]
+   }
+  },
+  {
+   "id": "trv-261029-08",
+   "system": "Other",
+   "topic": "Etymology of muscle",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "etymology"
+   ],
+   "stem": "The word \"muscle\" comes from the Latin musculus, because some muscles were thought to look like a small animal moving under the skin.",
+   "lead": "What does musculus literally mean?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Little snake",
+     "explanation": "No, though Middle English also called muscles \"lacerte,\" from lizard."
+    },
+    {
+     "label": "B",
+     "text": "Little fish",
+     "explanation": "No connection."
+    },
+    {
+     "label": "C",
+     "text": "Little rope",
+     "explanation": "No connection."
+    },
+    {
+     "label": "D",
+     "text": "Little mouse",
+     "explanation": "Correct: a diminutive of mus, mouse."
+    }
+   ],
+   "answer": "D",
+   "explanation": "Musculus is a diminutive of mus, mouse, and Greek mys likewise meant both mouse and muscle, which is where \"myo-\" comes from. The shellfish \"mussel\" descends from the very same Latin word.",
+   "references": [
+    {
+     "title": "muscle, Online Etymology Dictionary",
+     "url": "https://www.etymonline.com/search?q=muscle",
+     "supports": "musculus = little mouse; Greek mys mouse/muscle; lacerte; mussel from musculus"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-09",
+   "system": "Infectious Disease",
+   "topic": "Etymology of influenza",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "etymology"
+   ],
+   "stem": "The Italian word influenza originally blamed outbreaks on a mysterious force. It was applied to an outbreak in 1743 and later shortened to \"flu.\"",
+   "lead": "What was the \"influence\" thought to come from?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Swamp air",
+     "explanation": "That idea named malaria: Italian for \"bad air.\""
+    },
+    {
+     "label": "B",
+     "text": "The stars",
+     "explanation": "Correct: an astrological influence on health."
+    },
+    {
+     "label": "C",
+     "text": "Cold weather",
+     "explanation": "Not the original idea behind the word."
+    },
+    {
+     "label": "D",
+     "text": "Polluted water",
+     "explanation": "Not the original idea behind the word."
+    }
+   ],
+   "answer": "B",
+   "explanation": "Influenza is Italian for \"influence,\" meaning the supposed influence of the stars on health; \"influenza di catarro\" was applied to an outbreak in 1743. Malaria's name, \"bad air,\" preserves a similarly mistaken theory of disease.",
+   "references": [
+    {
+     "title": "Sick words: The etymology of disease (Gavi, VaccinesWork)",
+     "url": "https://www.gavi.org/vaccineswork/sick-words-etymology-disease",
+     "supports": "Influenza from influence of the stars, 1743; malaria = bad air"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "revise",
+    "issues": [
+     "Stem says English borrowed the word in the 1740s; the Gavi source only supports its use for an outbreak in 1743"
+    ]
+   }
+  },
+  {
+   "id": "trv-261029-10",
+   "system": "Neurology",
+   "topic": "Mercury and the hatters' shakes",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "toxicology"
+   ],
+   "stem": "Nineteenth-century hat makers in Danbury, Connecticut, developed tremors nicknamed the \"Danbury shakes\" from a chemical used to turn animal fur into felt.",
+   "lead": "Which chemical?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Lead acetate",
+     "explanation": "Not the felting agent."
+    },
+    {
+     "label": "B",
+     "text": "Arsenic trioxide",
+     "explanation": "Not the felting agent."
+    },
+    {
+     "label": "C",
+     "text": "Mercury nitrate",
+     "explanation": "Correct: used to treat fur in making felt."
+    },
+    {
+     "label": "D",
+     "text": "Carbon disulfide",
+     "explanation": "Not the felting agent."
+    }
+   ],
+   "answer": "C",
+   "explanation": "Felt makers used mercury nitrate on fur, and chronic exposure caused tremor, speech problems and emotional instability. The phrase \"mad as a hatter\" is often linked to it, and in the US mercury wasn't banned from felt-making until the early 1940s.",
+   "references": [
+    {
+     "title": "Where did the phrase \"mad as a hatter\" come from? (History.com)",
+     "url": "https://www.history.com/news/where-did-the-phrase-mad-as-a-hatter-come-from",
+     "supports": "Mercury nitrate in felt; tremors and other symptoms; Danbury shakes; US ban early 1940s"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-11",
+   "system": "General Internal Medicine",
+   "topic": "\"First, do no harm\" and the Oath",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "myth-busting"
+   ],
+   "stem": "\"First, do no harm\" is widely believed to be a line from the Hippocratic Oath.",
+   "lead": "Where does the closest Hippocratic wording actually appear?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Epidemics",
+     "explanation": "Correct: it advises the physician to help, or at least do no harm."
+    },
+    {
+     "label": "B",
+     "text": "The Oath itself",
+     "explanation": "It promises to avoid harm, but never says \"first, do no harm.\""
+    },
+    {
+     "label": "C",
+     "text": "Aphorisms",
+     "explanation": "Not the source of this wording."
+    },
+    {
+     "label": "D",
+     "text": "On the Sacred Disease",
+     "explanation": "Not the source of this wording."
+    }
+   ],
+   "answer": "A",
+   "explanation": "The phrase isn't in the Hippocratic Oath. The nearest Hippocratic version comes from Epidemics, which tells the physician to help, or at least do no harm, without making harm-avoidance the top priority.",
+   "references": [
+    {
+     "title": "First, do no harm (Harvard Health Blog)",
+     "url": "https://www.health.harvard.edu/blog/first-do-no-harm-201510138421",
+     "supports": "Not in the Oath; from Of the Epidemics; no clear priority given"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-12",
+   "system": "Cardiology",
+   "topic": "Laennec's first stethoscope",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "history"
+   ],
+   "stem": "In 1816, René Laennec needed to listen to a young woman's heart but found pressing his ear to her chest impractical.",
+   "lead": "What did he improvise into the first stethoscope?",
+   "options": [
+    {
+     "label": "A",
+     "text": "A hollow cane",
+     "explanation": "Not what he used."
+    },
+    {
+     "label": "B",
+     "text": "A brass ear trumpet",
+     "explanation": "Not what he used."
+    },
+    {
+     "label": "C",
+     "text": "A wooden flute",
+     "explanation": "Not what he used."
+    },
+    {
+     "label": "D",
+     "text": "A rolled sheet of paper",
+     "explanation": "Correct: a quire of paper rolled into a tube."
+    }
+   ],
+   "answer": "D",
+   "explanation": "Remembering children sending sounds along a piece of wood, Laennec rolled paper into a cylinder and heard the heart more clearly than with his bare ear. Between 1816 and 1819 he refined the idea into hollow wooden tubes.",
+   "references": [
+    {
+     "title": "A curious inspiration for the first stethoscope (PBS NewsHour)",
+     "url": "https://www.pbs.org/newshour/health/a-curious-inspiration-for-the-first-stethoscope",
+     "supports": "Young woman with heart disease, children with wood, rolled paper, wooden tubes 1816-1819"
+    },
+    {
+     "title": "Laennec and the stethoscope, Cardiology Journal (Via Medica)",
+     "url": "https://journals.viamedica.pl/cardiology_journal/article/download/21677/17281",
+     "supports": "Laennec's own quote about rolling a quire of paper"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "revise",
+    "issues": [
+     "Option A explanation is confusing and implies a cane was involved"
+    ]
+   }
+  },
+  {
+   "id": "trv-261029-13",
+   "system": "Infectious Disease",
+   "topic": "Fanny Hesse and agar",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "lab-medicine"
+   ],
+   "stem": "In 1881, gelatin culture plates kept melting in the summer heat for Walther Hesse, who had worked in Robert Koch's lab. His wife Fanny suggested agar, which she already used elsewhere.",
+   "lead": "Where had she been using it?",
+   "options": [
+    {
+     "label": "A",
+     "text": "For photographic plates",
+     "explanation": "Not where she knew it from."
+    },
+    {
+     "label": "B",
+     "text": "In her kitchen",
+     "explanation": "Correct: for jellies and puddings that stayed firm in heat."
+    },
+    {
+     "label": "C",
+     "text": "For coating pills",
+     "explanation": "Not where she knew it from."
+    },
+    {
+     "label": "D",
+     "text": "As a wound dressing",
+     "explanation": "Not where she knew it from."
+    }
+   ],
+   "answer": "B",
+   "explanation": "Hesse knew agar, a gel made from red seaweed, from cooking, and her husband Walther adopted it in his microbe work. Koch first mentioned agar in his 1882 tuberculosis paper, but the Hesses never published on it. She was born in New York.",
+   "references": [
+    {
+     "title": "Fanny Angelina Hesse (Science History Institute)",
+     "url": "https://www.sciencehistory.org/education/scientific-biographies/fanny-angelina-hesse/",
+     "supports": "Agar from red algae; summer 1881; never published"
+    },
+    {
+     "title": "Meet the forgotten woman who revolutionized microbiology (Smithsonian)",
+     "url": "https://www.smithsonianmag.com/history/meet-the-forgotten-woman-who-revolutionized-microbiology-with-a-simple-kitchen-staple-180984572/",
+     "supports": "Used in her kitchen for jellies; born in New York"
+    },
+    {
+     "title": "The Origins of Agar (Asimov Press)",
+     "url": "https://press.asimov.com/articles/agar",
+     "supports": "Koch mentioned agar first in his 1882 TB paper"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "revise",
+    "issues": [
+     "Stem places the melting gelatin 'in Koch's circle'; sources put it in Walther Hesse's own work after his time in Koch's lab"
+    ]
+   }
+  },
+  {
+   "id": "trv-261029-14",
+   "system": "Gastroenterology",
+   "topic": "Kussmaul and the sword swallower",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "eponyms"
+   ],
+   "stem": "In 1868, Adolf Kussmaul tested an early rigid tube for viewing the esophagus and stomach on a volunteer whose job suited him perfectly.",
+   "lead": "What was the volunteer's job?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Fire-eater",
+     "explanation": "Not his volunteer."
+    },
+    {
+     "label": "B",
+     "text": "Opera singer",
+     "explanation": "Not his volunteer."
+    },
+    {
+     "label": "C",
+     "text": "Sword swallower",
+     "explanation": "Correct: he could keep a straight path open to the stomach."
+    },
+    {
+     "label": "D",
+     "text": "Glassblower",
+     "explanation": "Not his volunteer."
+    }
+   ],
+   "answer": "C",
+   "explanation": "Kussmaul passed his tube into a professional sword swallower, but poor light and secretions limited the view and he never published the case. The same physician gave us Kussmaul breathing in diabetic ketoacidosis and Kussmaul's sign in constrictive pericarditis.",
+   "references": [
+    {
+     "title": "Rehnberg & Walters. The life and work of Adolph Kussmaul (PMC)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5606367",
+     "supports": "Sword swallower; limited views; never published; Kussmaul breathing and sign"
+    },
+    {
+     "title": "From candles and swallowing swords to gastroscopy (Hektoen International)",
+     "url": "https://hekint.org/2023/07/11/from-candles-and-swallowing-swords-to-gastroscopy/",
+     "supports": "First gastroscopy attributed to Kussmaul, 1868, on a sword swallower"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-15",
+   "system": "Neurology",
+   "topic": "Who named Parkinson's disease",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "eponyms"
+   ],
+   "stem": "James Parkinson's 1817 \"An Essay on the Shaking Palsy\" described six people, some of whom he only observed in the streets of London.",
+   "lead": "Who later named the condition after him?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Jean-Martin Charcot",
+     "explanation": "Correct: he proposed \"maladie de Parkinson.\""
+    },
+    {
+     "label": "B",
+     "text": "William Gowers",
+     "explanation": "Not the one who coined the eponym."
+    },
+    {
+     "label": "C",
+     "text": "William Osler",
+     "explanation": "Not the one who coined the eponym."
+    },
+    {
+     "label": "D",
+     "text": "Joseph Babinski",
+     "explanation": "Not the one who coined the eponym."
+    }
+   ],
+   "answer": "A",
+   "explanation": "More than half a century after the essay, Charcot proposed \"la maladie de Parkinson,\" partly because patients weren't truly weak and some had no rest tremor, so \"shaking palsy\" fit poorly.",
+   "references": [
+    {
+     "title": "Teive et al. Parkinson's disease, 200 years. Arq Neuropsiquiatr 2017",
+     "url": "https://thieme-connect.de/products/ejournals/pdf/10.1590/0004-282X20170006.pdf",
+     "supports": "Charcot suggested the eponym; normal strength; some without rest tremor"
+    },
+    {
+     "title": "Parkinson's disease history, ACNR",
+     "url": "https://acnr.co.uk/?p=4076",
+     "supports": "Six cases, some seen only in the street; Charcot promoted the eponym"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-16",
+   "system": "Pharmacology",
+   "topic": "Bayer's Heroin",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "history"
+   ],
+   "stem": "In 1898, Bayer trademarked a new drug as \"Heroin\" and promoted it to physicians, claiming it beat codeine for one particular job.",
+   "lead": "What was it mainly marketed for?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Local anaesthesia",
+     "explanation": "Not its main pitch."
+    },
+    {
+     "label": "B",
+     "text": "Fever",
+     "explanation": "Not its main pitch."
+    },
+    {
+     "label": "C",
+     "text": "Malaria",
+     "explanation": "Not its main pitch."
+    },
+    {
+     "label": "D",
+     "text": "Cough",
+     "explanation": "Correct: sold as a cough suppressant."
+    }
+   ],
+   "answer": "D",
+   "explanation": "Bayer's Heinrich Dreser claimed heroin (diacetylmorphine) was ten times as effective as codeine for respiratory complaints, with a fraction of the toxicity. Addiction soon proved otherwise. It wasn't even new: C. R. Alder Wright had synthesized it in London in 1874.",
+   "references": [
+    {
+     "title": "From poppy to morphine and heroin (Hektoen International)",
+     "url": "https://hekint.org/2023/05/30/from-poppy-to-morphine-and-heroin/",
+     "supports": "1898 Bayer marketing; cough suppressant; Dreser's 10x codeine claim; Wright 1874"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "revise",
+    "issues": [
+     "Option A explanation makes an unverified claim about cocaine"
+    ]
+   }
+  },
+  {
+   "id": "trv-261029-17",
+   "system": "Cardiology",
+   "topic": "Sildenafil's original target",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "pharmacology"
+   ],
+   "stem": "In the late 1980s, Pfizer chemists in Sandwich, England, developed compound UK-92480 as a new heart drug. Its trials took an unexpected turn.",
+   "lead": "What condition was it originally meant to treat?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Angina",
+     "explanation": "Correct: it was studied as an antianginal."
+    },
+    {
+     "label": "B",
+     "text": "Heart failure",
+     "explanation": "Not the target of the UK-92480 program."
+    },
+    {
+     "label": "C",
+     "text": "Atrial fibrillation",
+     "explanation": "Not the target of the UK-92480 program."
+    },
+    {
+     "label": "D",
+     "text": "Hypertensive emergency",
+     "explanation": "Not the target of the UK-92480 program."
+    }
+   ],
+   "answer": "A",
+   "explanation": "UK-92480, now sildenafil, was short-lived in the body and amplified the blood-pressure drop from nitrates, so its angina prospects faded. Male volunteers then reported erections, and Viagra was born. That nitrate interaction is still a key contraindication.",
+   "references": [
+    {
+     "title": "Sildenafil (Viagra), Chemistry World podcast (Royal Society of Chemistry)",
+     "url": "https://chemistryworld.com/podcasts/sildenafil-viagra/3008329.article",
+     "supports": "Sandwich; angina program; short half-life; nitrate interaction; erections"
+    },
+    {
+     "title": "How I discovered Viagra (Cosmos)",
+     "url": "https://cosmosmagazine.com/biology/how-i-discovered-viagra",
+     "supports": "Ian Osterloh first-hand account of angina studies and nitrate interaction"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-18",
+   "system": "Infectious Disease",
+   "topic": "Typhoid Mary's quarantine",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "famous-patients"
+   ],
+   "stem": "Mary Mallon, a cook and the first identified healthy carrier of typhoid in the US, spent decades in forced isolation.",
+   "lead": "Where was she quarantined?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Ellis Island",
+     "explanation": "The immigration station, not her quarantine site."
+    },
+    {
+     "label": "B",
+     "text": "Rikers Island",
+     "explanation": "Not where she was held."
+    },
+    {
+     "label": "C",
+     "text": "North Brother Island",
+     "explanation": "Correct: at Riverside Hospital in the East River."
+    },
+    {
+     "label": "D",
+     "text": "Staten Island",
+     "explanation": "Not where she was held."
+    }
+   ],
+   "answer": "C",
+   "explanation": "Mallon was held at Riverside Hospital on North Brother Island in New York's East River. After a period of freedom she was found cooking under an assumed name and sent back, spending about 26 more years there until her death.",
+   "references": [
+    {
+     "title": "Typhoid Mary: an asymptomatic carrier (National Museum of Health and Medicine)",
+     "url": "https://medicalmuseum.health.mil/micrograph/index.cfm/posts/2020/typhoid_mary_mary_mallon_salmonella",
+     "supports": "Quarantined at Riverside Hospital, North Brother Island; 26 more years"
+    },
+    {
+     "title": "Typhoid Mary's tragic tale (National Geographic)",
+     "url": "https://www.nationalgeographic.com/history/article/typhoid-mary-tragic-tale-exposed-health-impacts-super-spreaders",
+     "supports": "Cook; North Brother Island; worked under the name Brown"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-19",
+   "system": "Infectious Disease",
+   "topic": "Serratia over San Francisco",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "microbiology"
+   ],
+   "stem": "In 1950, a US Navy ship sprayed Serratia marcescens off San Francisco to test how a germ cloud would spread. The microbe was handy partly because it's easy to spot.",
+   "lead": "What makes its colonies stand out?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Green fluorescence",
+     "explanation": "More a Pseudomonas trait."
+    },
+    {
+     "label": "B",
+     "text": "Bright red pigment",
+     "explanation": "Correct: it makes a vivid red pigment."
+    },
+    {
+     "label": "C",
+     "text": "Black colonies",
+     "explanation": "Not a Serratia trait."
+    },
+    {
+     "label": "D",
+     "text": "A swarming film",
+     "explanation": "More a Proteus trait."
+    }
+   ],
+   "answer": "B",
+   "explanation": "Serratia marcescens makes a bright red pigment, so it's easy to see where it lands. Soon after Operation Sea Spray, Stanford's hospital saw a rare cluster of Serratia urinary infections, and one patient died, though any link to the spraying is still debated.",
+   "references": [
+    {
+     "title": "In 1950, the U.S. Released a Bioweapon in San Francisco (Smithsonian)",
+     "url": "https://www.smithsonianmag.com/smart-news/1950-us-released-bioweapon-san-francisco-180955819/",
+     "supports": "Red pigment makes it easy to track; Operation Sea Spray; Stanford cluster; one death; link suggested"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  },
+  {
+   "id": "trv-261029-20",
+   "system": "Respirology",
+   "topic": "Hamman's crunch",
+   "kind": "trivia",
+   "tags": [
+    "trivia",
+    "physical-exam"
+   ],
+   "stem": "Louis Hamman described a \"most extraordinary crunching, bubbling sound\" over the heart in patients with air in the mediastinum.",
+   "lead": "The crunch keeps time with what?",
+   "options": [
+    {
+     "label": "A",
+     "text": "Each breath",
+     "explanation": "It can vary with respiration, but it tracks the heart."
+    },
+    {
+     "label": "B",
+     "text": "Swallowing",
+     "explanation": "Not what it keeps time with."
+    },
+    {
+     "label": "C",
+     "text": "Coughing",
+     "explanation": "Not what it keeps time with."
+    },
+    {
+     "label": "D",
+     "text": "Each heartbeat",
+     "explanation": "Correct: a precordial crunch synchronous with the heart."
+    }
+   ],
+   "answer": "D",
+   "explanation": "Hamman's sign is a precordial crunch synchronous with the heartbeat, classically from pneumomediastinum, and it can also occur with a left pneumothorax. Hamman warned it could be mistaken for a pericardial rub, and the whole picture for a coronary occlusion.",
+   "references": [
+    {
+     "title": "Hamman's sign, Thorax (BMJ)",
+     "url": "https://thorax.bmj.com/content/68/8/794.full",
+     "supports": "Crunch synchronous with heart sounds; pneumomediastinum and pneumothorax; 1937"
+    },
+    {
+     "title": "Louis Hamman (LITFL)",
+     "url": "https://litfl.com/?p=207771",
+     "supports": "'Most extraordinary crunching, bubbling sound'; mistaken for pericardial friction or coronary occlusion"
+    }
+   ],
+   "source": {
+    "book": "Medical trivia"
+   },
+   "review": {
+    "verdict": "keep",
+    "issues": []
+   }
+  }
+ ],
+ "version": "2026-10-30 01:05",
+ "generator": {
+  "type": "medical-trivia",
+  "runs": [
+   {
+    "at": "2026-10-30 01:05",
+    "questions": 20
+   }
+  ]
+ }
+}

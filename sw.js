@@ -1,5 +1,5 @@
 // Bump CACHE when you upload a new version so phones pick up the update.
-const CACHE = 'pager-v4';
+const CACHE = 'beeper-v6';
 const ASSETS = [
   './', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
@@ -23,6 +23,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  // Shared banks always come from the network; the app stores them itself for offline use.
+  if (new URL(req.url).pathname.includes('/banks/')) return;
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then(hit => hit || fetch(req).catch(() =>
       req.mode === 'navigate' ? caches.match('index.html') : Response.error()))

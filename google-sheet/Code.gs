@@ -1,11 +1,11 @@
 /**
- * Pager feedback collector.
+ * Beeper feedback collector.
  * Paste this into Extensions → Apps Script of a Google Sheet, then deploy as a web app
  * (Execute as: Me, Who has access: Anyone). Put the /exec URL in FEEDBACK_ENDPOINT in app.js.
  *
  * One row per person per question. If someone edits their flag, their row is updated;
  * if they remove all tags and the note, their row is deleted.
- * Pager menu → Export feedback file makes a JSON file in your Drive in the format
+ * Beeper menu → Export feedback file makes a JSON file in your Drive in the format
  * the qbank skill's refine mode reads.
  */
 
@@ -78,11 +78,11 @@ function doPost(e) {
 }
 
 function doGet() {
-  return ContentService.createTextOutput('Pager feedback endpoint is running.');
+  return ContentService.createTextOutput('Beeper feedback endpoint is running.');
 }
 
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('Pager').addItem('Export feedback file', 'exportFeedback').addToUi();
+  SpreadsheetApp.getUi().createMenu('Beeper').addItem('Export feedback file', 'exportFeedback').addToUi();
 }
 
 function parse_(s) {
@@ -113,7 +113,7 @@ function exportFeedback() {
   const summary = { questions: items.length };
   TAGS.forEach(t => { summary[t] = items.filter(i => i.feedback.indexOf(t) !== -1).length; });
   const out = { type: 'feedback', app: 'pager', exportedAt: new Date().toISOString(), feedback_types: LABELS, summary, items };
-  const name = 'pager-feedback-' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd') + '.json';
+  const name = 'beeper-feedback-' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd') + '.json';
   const file = DriveApp.createFile(name, JSON.stringify(out, null, 1), MimeType.PLAIN_TEXT);
   const html = HtmlService.createHtmlOutput(
     '<p style="font-family:sans-serif">Saved <b>' + name + '</b> (' + items.length + ' flags) to your Drive.</p>' +

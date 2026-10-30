@@ -1,6 +1,11 @@
 'use strict';
 
-const APP_VERSION = '4.0.0';
+const APP_VERSION = '4.2.0';
+
+// Shared banks: the app checks this list on launch and pulls any bank that changed.
+const SHARED_DIR = 'banks/';
+const SHARED_INDEX = SHARED_DIR + 'index.json';
+const SYNC_EVERY_MS = 30 * 60 * 1000;
 
 // Paste your Google Apps Script web app URL here (ends in /exec). Leave empty to turn off sending.
 const FEEDBACK_ENDPOINT = '';
@@ -358,7 +363,7 @@ function viewHome() {
 
   return `
   <header class="top">
-    <h1 class="logo">Pager</h1>
+    <h1 class="logo">Beeper</h1>
     <div class="top-right">
       <button class="link-btn" data-action="go" data-view="stats">Stats</button>
       <button class="link-btn" data-action="go" data-view="settings">Settings</button>
@@ -375,7 +380,7 @@ function viewHome() {
 
   ${usingSample() ? '<section class="card"><p class="small muted">You\u2019re seeing the built-in sample questions. Add your own bank files in Settings and the samples will be hidden.</p></section>' : ''}
   ${!isStandalone() && !state.hints.installDismissed ? `
-  <section class="card hint"><span class="small">Add Pager to your home screen. It runs offline there and your progress is less likely to be cleared.</span><button class="link-btn" data-action="dismissHint">Got it</button></section>` : ''}
+  <section class="card hint"><span class="small">Add Beeper to your home screen. It runs offline there and your progress is less likely to be cleared.</span><button class="link-btn" data-action="dismissHint">Got it</button></section>` : ''}
 
   <section class="card">
     <h2>Questions</h2>
@@ -458,7 +463,7 @@ function viewQuiz() {
   return `
   ${top}
   <section class="pager" aria-label="Question">
-    <div class="pager-top"><span class="brand">Pager</span><span id="led" class="led on ${run.fresh ? 'flash' : ''}" aria-hidden="true"></span></div>
+    <div class="pager-top"><span class="brand">Beeper</span><span id="led" class="led on ${run.fresh ? 'flash' : ''}" aria-hidden="true"></span></div>
     <div class="lcd screen">
       <div class="lcd-head"><span>PG ${pad(run.answered + (reveal ? 0 : 1), 2)}</span><span>${reveal ? esc((q.system || '').toUpperCase()) : ''}</span></div>
       <div class="lcd-text">
@@ -521,13 +526,14 @@ function viewSettings() {
   <section class="card">
     <h2>Question banks</h2>
     ${state.banks.length ? state.banks.map(b => `
-      <div class="kv"><span><b>${esc(b.title || b.id)}</b><br><span class="small muted">${(b.questions || []).length} questions${b.version ? `, updated ${esc(b.version)}` : ''}</span></span>
-      <button class="link-btn danger-text" data-action="removeBank" data-v="${esc(b.id)}">Remove</button></div>`).join('')
-      : '<p class="small muted">No banks added yet, so the sample questions are shown.</p>'}
+      <div class="kv"><span><b>${esc(b.title || b.id)}</b><br><span class="small muted">${b.remote ? 'Shared, updates automatically' : 'On this phone'}, ${(b.questions || []).length} questions${b.version ? `, updated ${esc(b.version)}` : ''}</span></span>
+      ${b.remote ? '' : `<button class="link-btn danger-text" data-action="removeBank" data-v="${esc(b.id)}">Remove</button>`}</div>`).join('')
+      : '<p class="small muted">No banks yet, so the sample questions are shown.</p>'}
     <div class="btn-col" style="margin-top:14px">
+      <button class="btn" data-action="syncNow">Check for updates</button>
       <label class="btn">Add question bank files<input type="file" accept=".json,application/json" multiple hidden data-file="bank"></label>
     </div>
-    <p class="small muted" style="margin-top:10px">Each file is stored on this phone and works offline. Adding a file with the same bank id replaces the old version and keeps your progress.</p>
+    <p class="small muted" style="margin-top:10px">Shared banks download and update on their own whenever the app opens online. To skip one, deselect it under Sources on the home screen. Your progress is always kept, including when a bank is updated.${state.lastSync ? `<br>Last checked: ${esc(new Date(state.lastSync).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' }))}` : ''}</p>
   </section>
 
   <section class="card">
@@ -712,15 +718,18 @@ async function flushOutbox() {
   const pend = document.getElementById('pending');
   if (pend) pend.textContent = state.outbox.size;
 }
-window.addEventListener('online', flushOutbox);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushOutbox(); });
+window.addEventListener('online', () => { flushOutbox(); syncSharedBanks(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushOutbox();
+  else maybeSync();
+});
 
 async function exportFeedback() {
   const labels = Object.fromEntries(FEEDBACK_TYPES);
   const items = [...state.feedback.values()].map(feedbackItem);
   const summary = { questions: items.length };
   for (const [t] of FEEDBACK_TYPES) summary[t] = items.filter(i => i.feedback.includes(t)).length;
-  await shareJson(`pager-feedback-${new Date().toISOString().slice(0, 10)}.json`, {
+  await shareJson(`beeper-feedback-${new Date().toISOString().slice(0, 10)}.json`, {
     type: 'feedback', app: 'pager', exportedAt: new Date().toISOString(), feedback_types: labels, summary, items,
   });
 }
@@ -739,6 +748,58 @@ function normalizeBank(data, filename) {
     enabled: true, addedAt: Date.now(),
   };
 }
+let syncing = false, syncPending = false;
+async function syncSharedBanks({ manual = false } = {}) {
+  if (location.protocol === 'file:') return;
+  if (state.view === 'quiz') { syncPending = true; return; } // never swap questions mid-session
+  if (syncing) return;
+  if (!navigator.onLine) { if (manual) toast('You\u2019re offline. Shared banks will update when you\u2019re back online.'); return; }
+  syncing = true;
+  const changes = [];
+  try {
+    const res = await fetch(SHARED_INDEX, { cache: 'no-cache' });
+    if (!res.ok) { if (manual) toast('No shared banks are published yet.'); return; }
+    const index = await res.json();
+    const files = (index.banks || []).map(x => (typeof x === 'string' ? x : x && x.file)).filter(Boolean);
+    for (const file of files) {
+      try {
+        const r = await fetch(SHARED_DIR + file, { cache: 'no-cache' });
+        if (!r.ok) continue;
+        const bank = normalizeBank(await r.json(), file);
+        const old = state.banks.find(b => b.id === bank.id);
+        if (old && old.remote && old.version === bank.version && (old.questions || []).length === bank.questions.length) continue;
+        bank.remote = true;
+        bank.file = file;
+        if (old) { bank.enabled = old.enabled; bank.addedAt = old.addedAt; }
+        await idb.put('banks', bank);
+        state.banks = state.banks.filter(b => b.id !== bank.id).concat(bank).sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+        changes.push(old ? `${bank.title}: ${(old.questions || []).length} \u2192 ${bank.questions.length}` : `${bank.title}: ${bank.questions.length} new`);
+      } catch (e) { /* skip a bad file, keep the rest */ }
+    }
+    // A shared bank removed from the index is retired; progress stays saved in case it returns.
+    const retired = state.banks.filter(b => b.remote && !files.includes(b.file));
+    for (const b of retired) await idb.del('banks', b.id);
+    if (retired.length) state.banks = state.banks.filter(b => !retired.includes(b));
+    state.lastSync = Date.now();
+    setMeta('lastSync', state.lastSync);
+    if (changes.length || retired.length) {
+      rebuildIndex();
+      render();
+      toast(changes.length ? `Updated ${changes.join(', ')}` : 'Shared banks updated', 4000);
+    } else if (manual) {
+      toast('Shared banks are up to date');
+      render();
+    }
+  } catch (e) {
+    if (manual) toast('Couldn\u2019t reach the shared banks. Try again later.');
+  } finally {
+    syncing = false;
+  }
+}
+function maybeSync() {
+  if (!state.lastSync || Date.now() - state.lastSync > SYNC_EVERY_MS) syncSharedBanks();
+}
+
 async function addBanks(files) {
   for (const f of files) {
     try {
@@ -756,7 +817,7 @@ async function addBanks(files) {
   render();
 }
 async function exportProgress() {
-  await shareJson(`pager-progress-${new Date().toISOString().slice(0, 10)}.json`, {
+  await shareJson(`beeper-progress-${new Date().toISOString().slice(0, 10)}.json`, {
     app: 'pager', type: 'progress', format: 3, exportedAt: new Date().toISOString(),
     banks: state.banks.map(b => ({ id: b.id, title: b.title, version: b.version })),
     progress: [...state.progress.values()], feedback: [...state.feedback.values()],
@@ -790,7 +851,8 @@ async function importProgress(data) {
 // ---------- Actions ----------
 const actions = {
   go: el => go(el.dataset.view),
-  home: () => { flushOutbox(); state.run = null; go('home'); },
+  home: () => { flushOutbox(); state.run = null; go('home'); if (syncPending) { syncPending = false; syncSharedBanks(); } },
+  syncNow: () => syncSharedBanks({ manual: true }),
   dismissHint: () => { state.hints.installDismissed = true; setMeta('hints', state.hints); render(); },
   pool: el => { state.home.pool = el.dataset.v; saveHome(); render(); },
   sys: el => {
@@ -885,6 +947,7 @@ async function boot() {
     state.home = { pool: home.pool || 'unused', systems: Array.isArray(home.systems) ? home.systems : [] };
     state.hints = { ...state.hints, ...(await getMeta('hints', {})) };
     state.outbox = new Map(await getMeta('outbox', []));
+    state.lastSync = await getMeta('lastSync', 0);
     state.clientId = await getMeta('clientId', '');
     if (!state.clientId) {
       state.clientId = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now();
@@ -896,6 +959,7 @@ async function boot() {
   rebuildIndex();
   go('home');
   flushOutbox();
+  syncSharedBanks();
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* ignore */ }
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 }
