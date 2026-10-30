@@ -2,8 +2,6 @@
 
 Offline internal medicine question bank, with each question shown on a pager screen. It's a static web app that runs offline and installs to the home screen on iPhone and Android.
 
-This repo holds the app only. Question banks are loaded on each phone from a file and are never stored here.
-
 ## Put it online (GitHub Pages)
 
 1. Create a new public repo on github.com (for example `pager`).
