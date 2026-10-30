@@ -1,9 +1,9 @@
 'use strict';
 
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '3.0.0';
 
 // Paste your Google Apps Script web app URL here (ends in /exec). Leave empty to turn off sending.
-const FEEDBACK_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxXExsiVj608OERE-CsrzcUBhi2ENG7PUzgAsYkU8SivyvChYPhVGfzQkG_me24AZxUjA/exec';
+const FEEDBACK_ENDPOINT = '';
 
 // Spaced repetition intervals by box (box 0 = just missed)
 const MIN = 60 * 1000, DAY = 24 * 60 * MIN;
@@ -161,80 +161,87 @@ async function getMeta(k, fallback) {
 }
 const setMeta = (k, v) => idb.put('meta', { k, v });
 
+const SECONDS_PER_Q = 90;
+const POOLS = [
+  ['unused', 'Unused'],
+  ['all', 'All'],
+  ['incorrect', 'Incorrect'],
+  ['flagged', 'Flagged'],
+  ['due', 'Due'],
+];
+
 // ---------- State ----------
 const state = {
   view: 'home',
   banks: [],
+  byKey: new Map(),
   progress: new Map(),
   feedback: new Map(),
-  settings: { sr: true, buzz: true, systems: [], name: '' },
+  settings: { sr: true, buzz: true, name: '' },
+  home: { mode: 'tutor', pool: 'unused', systems: [], count: 10 },
   hints: { installDismissed: false },
   clientId: '',
   outbox: new Map(),
   session: null,
+  timerId: null,
 };
 const keyOf = (bankId, qid) => `${bankId}::${qid}`;
 
-function selectedBanks() {
-  if (!state.banks.length) return [SAMPLE_BANK];
-  return state.banks.filter(b => b.enabled !== false);
+const usingSample = () => !state.banks.length;
+const sourceBanks = () => (usingSample() ? [SAMPLE_BANK] : state.banks.filter(b => b.enabled !== false));
+function rebuildIndex() {
+  state.byKey = new Map();
+  for (const b of [SAMPLE_BANK, ...state.banks]) for (const q of b.questions || []) state.byKey.set(keyOf(b.id, q.id), { bank: b, q, key: keyOf(b.id, q.id) });
 }
-function allQuestions() {
+function sourceItems() {
   const out = [];
-  for (const b of selectedBanks()) for (const q of b.questions || []) out.push({ bank: b, q, key: keyOf(b.id, q.id) });
+  for (const b of sourceBanks()) for (const q of b.questions || []) out.push(state.byKey.get(keyOf(b.id, q.id)));
   return out;
 }
-function pool() {
-  const sel = state.settings.systems;
-  const all = allQuestions();
-  return sel.length ? all.filter(x => sel.includes(x.q.system || 'Other')) : all;
+const sysOf = item => item.q.system || 'Other';
+
+function inPool(item, pool, now) {
+  const p = state.progress.get(item.key);
+  switch (pool) {
+    case 'unused': return !p || !p.attempts;
+    case 'incorrect': return !!p && p.attempts > 0 && lastOk(p) === false;
+    case 'flagged': return state.feedback.has(item.key);
+    case 'due': return state.settings.sr && !!p && p.attempts > 0 && p.due <= now;
+    default: return true;
+  }
 }
-function systemsAvailable() {
-  const set = new Set(allQuestions().map(x => x.q.system || 'Other'));
+function lastOk(p) { return p && p.history && p.history.length ? p.history[p.history.length - 1].ok : null; }
+function pools() { return POOLS.filter(([k]) => k !== 'due' || state.settings.sr); }
+function candidates() {
+  const now = Date.now();
+  const sys = state.home.systems;
+  return sourceItems().filter(x => inPool(x, state.home.pool, now) && (!sys.length || sys.includes(sysOf(x))));
+}
+function systemsList() {
+  const set = new Set(sourceItems().map(sysOf));
   return [...set].sort((a, b) => (SYSTEM_ORDER.indexOf(a) + 1 || 99) - (SYSTEM_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
 }
-function bankProgress(b) {
-  let seen = 0;
-  for (const q of b.questions || []) if (state.progress.has(keyOf(b.id, q.id))) seen++;
-  return seen;
+function overallStats() {
+  const now = Date.now();
+  let used = 0, latestCorrect = 0, due = 0, flagged = 0;
+  const items = sourceItems();
+  for (const x of items) {
+    const p = state.progress.get(x.key);
+    if (state.feedback.has(x.key)) flagged++;
+    if (p && p.attempts) {
+      used++;
+      if (lastOk(p)) latestCorrect++;
+      if (p.due <= now) due++;
+    }
+  }
+  return { total: items.length, used, latestCorrect, due, flagged };
 }
 
-// ---------- Question selection ----------
-function pickQuestion() {
-  const p = pool();
-  if (!p.length) return null;
-  const recent = new Set(state.session ? state.session.recent : []);
-  let candidates = p.filter(x => !recent.has(x.key));
-  if (!candidates.length) candidates = p.filter(x => !state.session || x.key !== state.session.recent[state.session.recent.length - 1]);
-  if (!candidates.length) candidates = p;
-
-  const rand = arr => arr[Math.floor(Math.random() * arr.length)];
-  const unseen = candidates.filter(x => !state.progress.has(x.key));
-
-  if (!state.settings.sr) {
-    if (unseen.length) return rand(unseen);
-    return rand(candidates);
-  }
-
+function recordAnswer(key, choice, ok) {
+  const item = state.byKey.get(key);
   const now = Date.now();
-  const due = candidates.filter(x => {
-    const r = state.progress.get(x.key);
-    return r && typeof r.due === 'number' && r.due <= now;
-  });
-  if (due.length && (Math.random() < 0.35 || !unseen.length)) {
-    due.sort((a, b) => (state.progress.get(a.key).box || 0) - (state.progress.get(b.key).box || 0));
-    return rand(due.slice(0, Math.max(3, Math.ceil(due.length / 3))));
-  }
-  if (unseen.length) return rand(unseen);
-  const seen = candidates.slice().sort((a, b) => (state.progress.get(a.key).due || 0) - (state.progress.get(b.key).due || 0));
-  return rand(seen.slice(0, Math.min(10, seen.length)));
-}
-
-function recordAnswer(item, choice, ok) {
-  const now = Date.now();
-  const r = state.progress.get(item.key) || {
-    key: item.key, bankId: item.bank.id, questionId: item.q.id,
-    attempts: 0, correct: 0, history: [], box: 0, due: 0,
+  const r = state.progress.get(key) || {
+    key, bankId: item.bank.id, questionId: item.q.id, attempts: 0, correct: 0, history: [], box: 0, due: 0,
   };
   r.attempts += 1;
   if (ok) r.correct += 1;
@@ -243,30 +250,27 @@ function recordAnswer(item, choice, ok) {
   r.box = ok ? Math.min(INTERVALS.length - 1, (r.attempts === 1 ? 1 : (r.box || 0) + 1)) : 0;
   r.due = now + INTERVALS[r.box];
   r.lastSeen = now;
-  state.progress.set(item.key, r);
+  state.progress.set(key, r);
   idb.put('progress', r);
 }
 
 // ---------- Helpers ----------
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const fmt = n => Math.round(n).toLocaleString('en-CA');
+const rich = t => String(t ?? '').trim().split(/\n\s*\n/).filter(Boolean).map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+const pct = (n, d) => (d ? Math.round((100 * n) / d) + '%' : '—');
 const pad = (n, w) => String(Math.round(n)).padStart(w, '0');
-function paragraphs(text) {
-  return String(text || '').trim().split(/\n\s*\n/).map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
-}
-function splitTakeaway(q) {
-  if (q.takeaway) return [q.takeaway, q.explanation || ''];
-  const text = String(q.explanation || '').trim();
-  const m = text.match(/^(.+?[.!?])(\s+)([A-Z0-9(].*)$/s);
-  return m ? [m[1], m[3]] : [text, ''];
+const mmss = sec => { sec = Math.max(0, Math.round(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; };
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
 }
 let toastTimer;
-function toast(msg) {
+function toast(msg, ms = 2600) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
 function buzz(pattern) {
   if (state.settings.buzz && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) { /* ignore */ } }
@@ -286,346 +290,433 @@ async function shareJson(filename, obj) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const saveHome = () => setMeta('home', state.home);
+const saveSession = () => setMeta('session', state.session);
+
+// ---------- Navigation + timer ----------
+function go(view, { keepScroll = false } = {}) {
+  stopTimer();
+  state.view = view;
+  render();
+  if (!keepScroll) window.scrollTo(0, 0);
+  const s = state.session;
+  if (view === 'quiz' && s && s.mode === 'timed' && !s.finished) startTimer();
+}
+function startTimer() {
+  stopTimer();
+  let ticks = 0;
+  state.timerId = setInterval(() => {
+    const s = state.session;
+    if (!s || s.finished) return stopTimer();
+    s.remaining -= 1;
+    ticks++;
+    const el = document.getElementById('timer');
+    if (el) { el.textContent = mmss(s.remaining); el.classList.toggle('low', s.remaining <= 60); }
+    if (ticks % 5 === 0) saveSession();
+    if (s.remaining <= 0) { stopTimer(); toast('Time is up'); finishBlock(); }
+  }, 1000);
+}
+function stopTimer() { if (state.timerId) clearInterval(state.timerId); state.timerId = null; }
 
 // ---------- Views ----------
-function viewHome() {
-  const systems = systemsAvailable();
-  const sel = state.settings.systems.filter(s => systems.includes(s));
-  const count = pool().length;
-  const banksHtml = state.banks.length
-    ? state.banks.map(b => {
-      const n = (b.questions || []).length;
-      return `
-      <label class="pick">
-        <input type="checkbox" data-change="bankToggle" data-id="${esc(b.id)}" ${b.enabled !== false ? 'checked' : ''}>
-        <span><span class="name">${esc(b.title || b.id)}</span><span class="small muted">${fmt(bankProgress(b))} of ${fmt(n)} seen</span></span>
-      </label>`;
-    }).join('')
-    : `<div class="pick static"><span><span class="name">${esc(SAMPLE_BANK.title)}</span><span class="small muted">Built in. Add your own bank files to replace these.</span></span></div>`;
-
-  return `
-  <header class="home-head">
-    <h1>Pager</h1>
-    <button class="linkish" data-action="go" data-view="settings">Settings</button>
-  </header>
-  <section class="panel">
-    <h2>Question banks</h2>
-    <div class="picks">${banksHtml}</div>
-    <label class="btn quiet">Add bank files<input type="file" accept=".json,application/json" multiple hidden data-change="addBanks"></label>
-  </section>
-  ${systems.length > 1 ? `
-  <details class="systems">
-    <summary>Systems: ${sel.length ? `${sel.length} selected` : 'all'}</summary>
-    <div class="chips">
-      <button class="chip" data-action="sysAll" aria-pressed="${sel.length === 0}">All</button>
-      ${systems.map(s => `<button class="chip" data-action="sys" data-sys="${esc(s)}" aria-pressed="${sel.includes(s)}">${esc(s)}</button>`).join('')}
-    </div>
-  </details>` : ''}
-  ${!isStandalone() && !state.hints.installDismissed ? `
-  <div class="hint"><span>Add Pager to your home screen. It runs offline there and your progress is less likely to be cleared.</span><button class="linkish" data-action="dismissHint">Got it</button></div>` : ''}
-  <div class="dock"><div class="inner">
-    <button class="btn" data-action="start" ${count ? '' : 'disabled'}>${count ? `Start (${fmt(count)} question${count === 1 ? '' : 's'})` : 'Select a bank to start'}</button>
-  </div></div>`;
+function chip(action, v, label, count, on) {
+  return `<button class="chip ${on ? 'on' : ''}" data-action="${action}" data-v="${esc(v)}">${esc(label)}${count != null ? `<span class="ct">${count}</span>` : ''}</button>`;
 }
 
-function viewPlay() {
+function viewHome() {
+  const st = overallStats();
+  const h = state.home;
   const s = state.session;
-  const top = `
-  <div class="play-top">
-    <button class="back" data-action="done">Done</button>
-    <span class="small muted">${s.answered ? `${s.correct} of ${s.answered} correct` : ''}</span>
-  </div>`;
-  if (!s.current) {
-    return `${top}<div class="empty"><h2>No questions to show</h2><p class="muted" style="margin-top:8px">Select more banks or systems on the home screen.</p></div>`;
+  const now = Date.now();
+  const items = sourceItems();
+  if (!pools().some(([k]) => k === h.pool)) h.pool = 'unused';
+
+  const poolCounts = Object.fromEntries(pools().map(([k]) => [k, items.filter(x => inPool(x, k, now)).length]));
+  const sysChips = systemsList().map(sys => {
+    const n = items.filter(x => sysOf(x) === sys && inPool(x, h.pool, now)).length;
+    return chip('sys', sys, sys, n, h.systems.includes(sys));
+  }).join('');
+  const sourceChips = state.banks.map(b => chip('src', b.id, b.title || b.id, (b.questions || []).length, b.enabled !== false)).join('');
+  const avail = candidates().length;
+  const count = Math.min(h.count, Math.max(avail, 1));
+
+  let sessionCard = '';
+  if (s && !s.finished) {
+    const answered = Object.keys(s.answers).length;
+    sessionCard = `
+    <section class="card">
+      <h2>Block in progress</h2>
+      <p>${s.mode === 'timed' ? 'Timed' : 'Tutor'}, ${answered} of ${s.keys.length} answered${s.mode === 'timed' ? `, ${mmss(s.remaining)} left` : ''}</p>
+      <div class="btn-row"><button class="btn" data-action="discard">Discard</button><button class="btn primary" data-action="resume">Resume</button></div>
+    </section>`;
+  } else if (s && s.finished) {
+    sessionCard = `<section class="card"><div class="btn-row"><button class="btn" data-action="go" data-view="results">Review last block</button></div></section>`;
   }
-  const { q, bank } = s.current;
-  const answered = !!s.chosen;
-  const ok = answered && s.chosen === q.answer;
+
+  return `
+  <header class="top">
+    <h1 class="logo">Pager</h1>
+    <div class="top-right">
+      <button class="link-btn" data-action="go" data-view="stats">Stats</button>
+      <button class="link-btn" data-action="go" data-view="settings">Settings</button>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="stat-grid">
+      <div><div class="num">${st.used}/${st.total}</div><div class="lab">Used</div></div>
+      <div><div class="num">${pct(st.latestCorrect, st.used)}</div><div class="lab">Correct</div></div>
+      ${state.settings.sr
+        ? `<div><div class="num">${st.due}</div><div class="lab">Due</div></div>`
+        : `<div><div class="num">${st.flagged}</div><div class="lab">Flagged</div></div>`}
+    </div>
+  </section>
+
+  ${sessionCard}
+  ${usingSample() ? '<section class="card"><p class="small muted">You\u2019re seeing the built-in sample questions. Add your own bank files in Settings and the samples will be hidden.</p></section>' : ''}
+  ${!isStandalone() && !state.hints.installDismissed ? `
+  <section class="card hint"><span class="small">Add Pager to your home screen. It runs offline there and your progress is less likely to be cleared.</span><button class="link-btn" data-action="dismissHint">Got it</button></section>` : ''}
+
+  <section class="card">
+    <h2>Mode</h2>
+    <div class="seg">
+      <button class="${h.mode === 'tutor' ? 'on' : ''}" data-action="mode" data-v="tutor">Tutor</button>
+      <button class="${h.mode === 'timed' ? 'on' : ''}" data-action="mode" data-v="timed">Timed</button>
+    </div>
+    <p class="small muted" style="margin-top:8px">${h.mode === 'tutor'
+      ? 'Tap an answer to lock it in and see the explanation.'
+      : `${SECONDS_PER_Q} seconds per question, explanations at the end.`}</p>
+
+    <h2>Questions</h2>
+    <div class="chips">${pools().map(([k, label]) => chip('pool', k, label, poolCounts[k], h.pool === k)).join('')}</div>
+
+    ${state.banks.length > 1 ? `
+    <h2>Sources</h2>
+    <div class="chips">${chip('src', '*', 'All sources', null, state.banks.every(b => b.enabled !== false))}${sourceChips}</div>` : ''}
+
+    <h2>Systems</h2>
+    <div class="chips">${chip('sys', '*', 'All systems', null, !h.systems.length)}${sysChips}</div>
+
+    <h2>Number of questions</h2>
+    <div class="stepper">
+      <button data-action="count" data-d="-1" aria-label="Fewer">−</button>
+      <span class="val">${avail ? count : 0}</span>
+      <button data-action="count" data-d="1" aria-label="More">+</button>
+      <span class="small muted">of ${avail} available</span>
+    </div>
+
+    <button class="btn primary block" data-action="start" ${avail ? '' : 'disabled'}>${avail ? 'Start block' : 'No questions match'}</button>
+  </section>`;
+}
+
+function viewQuiz() {
+  const s = state.session;
+  const n = s.keys.length;
+  const key = s.keys[s.idx];
+  const { q, bank } = state.byKey.get(key);
+  const chosen = s.answers[key];
+  const reveal = s.finished || (s.mode === 'tutor' && s.submitted[key]);
 
   const opts = (q.options || []).map(o => {
     let cls = 'opt';
-    if (answered && o.label === q.answer) cls += ' correct';
-    else if (answered && o.label === s.chosen) cls += ' wrong';
-    const why = answered && o.explanation && (o.label === q.answer || o.label === s.chosen);
-    return `<button class="${cls}" data-action="answer" data-label="${esc(o.label)}" ${answered ? 'disabled' : ''}>
-      <b>${esc(o.label)}</b><span>${esc(o.text)}${why ? `<span class="why">${esc(o.explanation)}</span>` : ''}</span>
-    </button>`;
+    if (chosen === o.label) cls += ' selected';
+    if (reveal) {
+      if (o.label === q.answer) cls += ' correct';
+      else if (chosen === o.label) cls += ' wrong';
+      else cls += ' dim';
+    }
+    const exp = reveal && o.explanation ? `<div class="opt-exp">${esc(o.explanation)}</div>` : '';
+    return `<button class="${cls}" data-action="choose" data-label="${esc(o.label)}" ${reveal ? 'disabled' : ''}>
+        <span class="lbl">${esc(o.label)}</span><span class="txt">${esc(o.text)}</span>
+      </button>${exp}`;
   }).join('');
 
   let after = '';
-  if (answered) {
-    const [line, rest] = splitTakeaway(q);
+  if (reveal) {
+    const correct = (q.options || []).find(o => o.label === q.answer);
+    const correctText = correct ? `${esc(q.answer)}. ${esc(correct.text)}` : esc(q.answer);
+    let verdict;
+    if (!chosen) verdict = `<div class="verdict skip">Not answered. Answer: ${correctText}</div>`;
+    else if (chosen === q.answer) verdict = '<div class="verdict ok">Correct</div>';
+    else verdict = `<div class="verdict bad">Incorrect. Answer: ${correctText}</div>`;
+
     const src = q.source || {};
-    const srcText = [src.book || bank.title, src.page ? `p. ${src.page}` : ''].filter(Boolean).join(', ');
+    const srcText = typeof src === 'string' ? src : [src.book || bank.title, src.page ? `p. ${src.page}` : ''].filter(Boolean).join(', ');
     const refs = (q.references || []).filter(r => /^https?:\/\//.test(r.url || ''));
-    const others = (q.options || []).filter(o => o.explanation && o.label !== q.answer && o.label !== s.chosen);
-    const fb = state.feedback.get(s.current.key);
+    const fb = state.feedback.get(key);
     const types = fb ? fb.types : [];
     after = `
-    <div class="takeaway ${ok ? '' : 'missed'}" id="takeaway">
-      <div class="verdict">${ok ? 'Correct' : `Answer: ${esc(q.answer)}`}</div>
-      <p class="line">${esc(line)}</p>
-    </div>
-    <details class="more">
-      <summary>Full explanation</summary>
-      <div class="more-body">
-        ${rest ? paragraphs(rest) : ''}
-        ${others.length ? `<ul class="refs">${others.map(o => `<li><b>${esc(o.label)}</b> ${esc(o.text)}: <span class="muted">${esc(o.explanation)}</span></li>`).join('')}</ul>` : ''}
-        <p class="source">${esc(q.system || '')}${q.topic ? `, ${esc(q.topic)}` : ''}${srcText ? `<br>Source: ${esc(srcText)}` : ''}</p>
-        ${refs.length ? `<div><h3>Outside sources</h3><ul class="refs">${refs.map(r => `<li><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title || r.url)}</a>${r.supports ? `<br><span class="small muted">${esc(r.supports)}</span>` : ''}</li>`).join('')}</ul></div>` : ''}
-        <div class="flag">
-          <h3>Flag this question</h3>
-          ${FEEDBACK_ENDPOINT ? '<p class="small muted">Flags and notes are sent to the question bank maintainer.</p>' : ''}
-          <div class="chips">
-            ${FEEDBACK_TYPES.map(([t, label]) => `<button class="chip" data-action="flag" data-type="${t}" aria-pressed="${types.includes(t)}">${esc(label)}</button>`).join('')}
-          </div>
-          <textarea id="note" placeholder="What should change? (optional)" ${types.length ? '' : 'hidden'}>${esc(fb ? fb.note : '')}</textarea>
-        </div>
+    ${verdict}
+    <section class="card exp">
+      <h3>Explanation</h3>
+      ${rich(q.explanation) || '<p class="muted">No explanation provided.</p>'}
+      <div class="src">${esc(q.system || '')}${q.topic ? `, ${esc(q.topic)}` : ''}${srcText ? `<br>Source: ${esc(srcText)}` : ''}</div>
+      ${refs.length ? `<h3 style="margin-top:14px">Outside sources</h3><ul class="refs">${refs.map(r => `<li><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title || r.url)}</a>${r.supports ? `<br><span class="small muted">${esc(r.supports)}</span>` : ''}</li>`).join('')}</ul>` : ''}
+    </section>
+    <section class="card">
+      <h3>Question feedback</h3>
+      <p class="small muted">Optional.${FEEDBACK_ENDPOINT ? ' Sent to the question bank maintainer.' : ''}</p>
+      <div class="chips" style="margin-top:10px">
+        ${FEEDBACK_TYPES.map(([t, label]) => `<button class="chip ${types.includes(t) ? 'on' : ''}" data-action="flagType" data-v="${t}">${esc(label)}</button>`).join('')}
       </div>
-    </details>`;
+      <textarea id="note" placeholder="What should change? (optional)" ${types.length ? '' : 'hidden'}>${esc(fb ? fb.note : '')}</textarea>
+    </section>`;
   }
 
+  let primary;
+  if (s.finished) {
+    primary = s.idx < n - 1
+      ? '<button class="btn primary" data-action="next">Next</button>'
+      : '<button class="btn primary" data-action="go" data-view="results">Results</button>';
+  } else {
+    primary = s.idx < n - 1
+      ? '<button class="btn primary" data-action="next">Next</button>'
+      : `<button class="btn primary" data-action="finish">${s.mode === 'timed' ? 'End block' : 'Finish block'}</button>`;
+  }
+  const timer = s.mode === 'timed' && !s.finished ? `<span id="timer" class="timer ${s.remaining <= 60 ? 'low' : ''}">${mmss(s.remaining)}</span>` : '';
+  const endBtn = s.mode === 'timed' && !s.finished ? '<button class="link-btn" data-action="finish">End</button>' : '';
+
   return `
-  ${top}
+  <header class="top">
+    <button class="link-btn" data-action="exit">‹ ${s.finished ? 'Results' : 'Home'}</button>
+    <span class="center">${s.idx + 1} / ${n}</span>
+    <div class="top-right">${timer}${endBtn}</div>
+  </header>
+  <div class="progress"><div style="width:${((s.idx + 1) / n) * 100}%"></div></div>
+
   <section class="pager" aria-label="Question">
     <div class="pager-top"><span class="brand">Pager</span><span class="led ${s.fresh ? 'flash' : 'on'}" aria-hidden="true"></span></div>
     <div class="lcd screen">
-      <div class="lcd-row lcd-head"><span>PG ${pad(s.answered + (answered ? 0 : 1), 2)}</span><span>${answered ? esc((q.system || '').toUpperCase()) : ''}</span></div>
+      <div class="lcd-head"><span>PG ${pad(s.idx + 1, 2)}/${pad(n, 2)}</span><span>${reveal ? esc((q.system || '').toUpperCase()) : ''}</span></div>
       <div class="lcd-text">
-        ${paragraphs(q.stem)}
-        <p class="lead">${esc(q.lead || '')}</p>
+        ${rich(q.stem)}
+        ${q.lead ? `<p class="lead">${esc(q.lead)}</p>` : ''}
       </div>
     </div>
   </section>
-  <div class="options ${answered ? 'answered' : ''}">${opts}</div>
+
+  <div class="opts">${opts}</div>
   ${after}
-  ${answered ? `<div class="dock"><div class="inner"><button class="btn" data-action="next">Next</button></div></div>` : ''}`;
+
+  <nav class="bar">
+    <button class="btn" data-action="prev" ${s.idx === 0 ? 'disabled' : ''}>Prev</button>
+    ${primary}
+  </nav>`;
+}
+
+function viewResults() {
+  const s = state.session;
+  let correct = 0, skipped = 0;
+  const rows = s.keys.map((key, i) => {
+    const { q } = state.byKey.get(key);
+    const a = s.answers[key];
+    let status = 'skip', mark = '–';
+    if (a) { if (a === q.answer) { status = 'ok'; mark = '✓'; correct++; } else { status = 'bad'; mark = '✗'; } } else skipped++;
+    return `<button class="row" data-action="review" data-i="${i}">
+      <span class="mark ${status}">${mark}</span>
+      <span class="row-txt"><b>Q${i + 1}</b> ${esc(q.system || '')}${q.topic ? `, ${esc(q.topic)}` : ''}</span>
+      <span class="chev">›</span>
+    </button>`;
+  }).join('');
+  const n = s.keys.length;
+  return `
+  <header class="top">
+    <button class="link-btn" data-action="go" data-view="home">‹ Home</button>
+    <span class="center">Results</span><span style="width:48px"></span>
+  </header>
+  <section class="card score">
+    <div class="big">${pct(correct, n)}</div>
+    <p>${correct} of ${n} correct${skipped ? `, ${skipped} unanswered` : ''}</p>
+    <p class="small muted">${s.mode === 'timed' ? 'Timed' : 'Tutor'} block. Tap any question to review it.</p>
+  </section>
+  <section class="card">${rows}</section>`;
+}
+
+function viewStats() {
+  const st = overallStats();
+  const now = Date.now();
+  const items = sourceItems();
+  const rows = systemsList().map(sys => {
+    const qs = items.filter(x => sysOf(x) === sys);
+    let used = 0, ok = 0, due = 0;
+    for (const x of qs) {
+      const p = state.progress.get(x.key);
+      if (p && p.attempts) { used++; if (lastOk(p)) ok++; if (p.due <= now) due++; }
+    }
+    return { sys, total: qs.length, used, ok, due };
+  });
+  rows.sort((a, b) => {
+    if (!a.used !== !b.used) return a.used ? -1 : 1;
+    return (a.used ? a.ok / a.used : 0) - (b.used ? b.ok / b.used : 0);
+  });
+  return `
+  <header class="top">
+    <button class="link-btn" data-action="go" data-view="home">‹ Home</button>
+    <span class="center">Performance</span><span style="width:48px"></span>
+  </header>
+  <section class="card">
+    <div class="stat-grid">
+      <div><div class="num">${pct(st.used, st.total)}</div><div class="lab">Bank used</div></div>
+      <div><div class="num">${pct(st.latestCorrect, st.used)}</div><div class="lab">Correct</div></div>
+      <div><div class="num">${st.flagged}</div><div class="lab">Flagged</div></div>
+    </div>
+    <p class="small muted" style="margin-top:12px">\u201cCorrect\u201d uses your most recent attempt at each question.</p>
+  </section>
+  <section class="card">
+    <h2>By system (weakest first)</h2>
+    <table>
+      <thead><tr><th>System</th><th>Used</th><th>Correct</th>${state.settings.sr ? '<th>Due</th>' : ''}</tr></thead>
+      <tbody>${rows.map(r => `<tr><td>${esc(r.sys)}</td><td>${r.used}/${r.total}</td><td>${pct(r.ok, r.used)}</td>${state.settings.sr ? `<td>${r.due}</td>` : ''}</tr>`).join('')}</tbody>
+    </table>
+  </section>`;
 }
 
 function viewSettings() {
   const fbAll = [...state.feedback.values()];
   const counts = Object.fromEntries(FEEDBACK_TYPES.map(([t]) => [t, fbAll.filter(f => f.types.includes(t)).length]));
-
-  // Performance by system
-  const qIndex = new Map();
-  for (const b of [...state.banks, SAMPLE_BANK]) for (const q of b.questions || []) qIndex.set(keyOf(b.id, q.id), q);
-  const bySys = new Map();
-  for (const p of state.progress.values()) {
-    const q = qIndex.get(p.key);
-    if (!q) continue;
-    const sys = q.system || 'Other';
-    const cur = bySys.get(sys) || { a: 0, c: 0 };
-    cur.a += p.attempts; cur.c += p.correct;
-    bySys.set(sys, cur);
-  }
-  const rows = [...bySys.entries()].map(([sys, v]) => ({ sys, ...v, pct: v.a ? v.c / v.a : 0 })).sort((a, b) => a.pct - b.pct);
-
   return `
-  <div class="page-head"><button class="back" data-action="go" data-view="home">Back</button><h2>Settings</h2><span></span></div>
+  <header class="top">
+    <button class="link-btn" data-action="go" data-view="home">‹ Home</button>
+    <span class="center">Settings</span><span style="width:48px"></span>
+  </header>
 
-  <section class="panel">
-    <h3>Question banks</h3>
+  <section class="card">
+    <h2>Question banks</h2>
     ${state.banks.length ? state.banks.map(b => `
-      <div class="bank">
-        <div><div class="name">${esc(b.title || b.id)}</div><div class="small muted">${fmt((b.questions || []).length)} questions${b.version ? `, updated ${esc(b.version)}` : ''}</div></div>
-        <button class="linkish" data-action="removeBank" data-id="${esc(b.id)}">Remove</button>
-      </div>`).join('') : '<p class="small muted">No banks added yet.</p>'}
-    <p class="small muted">Adding a file with the same bank id replaces the old version and keeps your progress.</p>
+      <div class="kv"><span><b>${esc(b.title || b.id)}</b><br><span class="small muted">${(b.questions || []).length} questions${b.version ? `, updated ${esc(b.version)}` : ''}</span></span>
+      <button class="link-btn danger-text" data-action="removeBank" data-v="${esc(b.id)}">Remove</button></div>`).join('')
+      : '<p class="small muted">No banks added yet, so the sample questions are shown.</p>'}
+    <div class="btn-col" style="margin-top:14px">
+      <label class="btn">Add question bank files<input type="file" accept=".json,application/json" multiple hidden data-file="bank"></label>
+    </div>
+    <p class="small muted" style="margin-top:10px">Each file is stored on this phone and works offline. Adding a file with the same bank id replaces the old version and keeps your progress.</p>
   </section>
 
-  <section class="panel">
-    <h3>Questions</h3>
-    <label class="switch"><span><b>Spaced repetition</b><br><span class="small muted">Missed questions come back sooner, and ones you know well show up less. When off, questions are random, unseen ones first.</span></span><input type="checkbox" data-change="sr" ${state.settings.sr ? 'checked' : ''}></label>
-    <label class="switch"><span><b>Buzz on answer</b><br><span class="small muted">A short vibration after answering (Android only).</span></span><input type="checkbox" data-change="buzz" ${state.settings.buzz ? 'checked' : ''}></label>
+  <section class="card">
+    <h2>Study</h2>
+    <label class="switch"><span><b>Spaced repetition</b><br><span class="small muted">Questions get a review date: missed ones come back sooner, ones you know well later. Adds the Due filter. When off, there are no review dates.</span></span><input type="checkbox" data-change="sr" ${state.settings.sr ? 'checked' : ''}></label>
+    <label class="switch"><span><b>Vibrate on answer</b><br><span class="small muted">Android only.</span></span><input type="checkbox" data-change="buzz" ${state.settings.buzz ? 'checked' : ''}></label>
   </section>
 
-  <section class="panel">
-    <h3>Performance by system</h3>
-    ${rows.length ? rows.map(x => `
-      <div class="sys">
-        <span>${esc(x.sys)}</span><span class="small muted">${Math.round(x.pct * 100)}% of ${x.a}</span>
-        <div class="bar ${x.pct < 0.6 ? 'low' : ''}"><i style="width:${(x.pct * 100).toFixed(1)}%"></i></div>
-      </div>`).join('') : '<p class="small muted">Answer a few questions and your systems show up here, weakest first.</p>'}
-  </section>
-
-  <section class="panel">
-    <h3>Question feedback</h3>
-    ${FEEDBACK_ENDPOINT ? `<p class="small muted">Flags are sent to the question bank maintainer automatically, including ones you made offline once you\u2019re back online. Waiting to send: <b id="pending">${state.outbox.size}</b></p>
-    <label class="field"><b>Your name</b> <span class="small muted">(optional, sent with your flags)</span>
+  <section class="card">
+    <h2>Question feedback</h2>
+    ${FEEDBACK_ENDPOINT ? `<p class="small muted">Feedback is sent to the question bank maintainer automatically, including feedback given offline once you\u2019re back online. Waiting to send: <b id="pending">${state.outbox.size}</b></p>
+    <label class="field"><b>Your name</b> <span class="small muted">(optional, sent with your feedback)</span>
       <input type="text" data-input="name" value="${esc(state.settings.name)}" maxlength="60" autocomplete="name">
     </label>` : ''}
-    ${fbAll.length ? FEEDBACK_TYPES.map(([t, label]) => `<div class="kv"><span>${esc(label)}</span><span>${counts[t]}</span></div>`).join('') + `<div class="kv"><b>Flagged questions</b><b>${fbAll.length}</b></div>`
-      : '<p class="small muted">Flag questions from the full explanation after you answer.</p>'}
-    <div class="btn-col">
-      <button class="btn quiet" data-action="exportFeedback" ${fbAll.length ? '' : 'disabled'}>Export feedback file</button>
+    ${fbAll.length ? FEEDBACK_TYPES.map(([t, label]) => `<div class="kv"><span>${esc(label)}</span><span>${counts[t]}</span></div>`).join('') + `<div class="kv"><span><b>Questions with feedback</b></span><span><b>${fbAll.length}</b></span></div>`
+      : '<p class="small muted">No feedback yet. After answering a question you can tag it as incorrect, not clinically relevant, too long, or other.</p>'}
+    <div class="btn-col" style="margin-top:14px">
+      <button class="btn" data-action="exportFeedback" ${fbAll.length ? '' : 'disabled'}>Export feedback file</button>
       <button class="btn danger" data-action="clearFeedback" ${fbAll.length ? '' : 'disabled'}>Clear feedback on this phone</button>
     </div>
   </section>
 
-  <section class="panel">
-    <h3>Backup</h3>
-    <p class="small muted">Progress and feedback live on this phone. Export a backup before switching phones or clearing browser data.</p>
+  <section class="card">
+    <h2>Progress backup</h2>
     <div class="btn-col">
-      <button class="btn quiet" data-action="exportProgress">Export progress</button>
-      <label class="btn quiet">Import progress<input type="file" accept=".json,application/json" hidden data-change="importProgress"></label>
-      <button class="btn danger" data-action="resetProgress">Reset progress</button>
+      <button class="btn" data-action="exportProgress">Export progress</button>
+      <label class="btn">Import progress<input type="file" accept=".json,application/json" hidden data-file="progress"></label>
+      <button class="btn danger" data-action="resetProgress">Reset all progress</button>
     </div>
   </section>
 
-  <section class="panel">
+  <section class="card">
+    <h2>Storage</h2>
+    <div class="kv"><span>Persistent storage</span><span id="persist">…</span></div>
     <div class="kv"><span>App version</span><span>${APP_VERSION}</span></div>
-    <div class="kv"><span>Storage</span><span id="persist">Checking…</span></div>
   </section>`;
 }
 
 function render() {
   const app = document.getElementById('app');
-  const views = { home: viewHome, play: viewPlay, settings: viewSettings };
+  const views = { home: viewHome, quiz: viewQuiz, results: viewResults, stats: viewStats, settings: viewSettings };
+  if ((state.view === 'quiz' || state.view === 'results') && !state.session) state.view = 'home';
   app.innerHTML = (views[state.view] || viewHome)();
   if (state.view === 'settings') fillPersist();
 }
-
 async function fillPersist() {
   const el = document.getElementById('persist');
   if (!el) return;
-  let persisted = false;
-  try { persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : false; } catch (e) { /* ignore */ }
-  el.textContent = persisted ? 'Protected' : 'Standard';
+  try {
+    const p = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null;
+    el.textContent = p == null ? 'Unknown' : p ? 'On' : 'Not granted';
+  } catch (e) { el.textContent = 'Unknown'; }
 }
 
-// ---------- Actions ----------
-function go(view) {
-  state.view = view;
-  render();
-  window.scrollTo(0, 0);
+// ---------- Block lifecycle ----------
+async function startBlock() {
+  const pool = candidates();
+  if (!pool.length) return toast('No questions match these filters');
+  const n = Math.min(state.home.count, pool.length);
+  const keys = shuffle(pool.map(x => x.key)).slice(0, n);
+  state.session = {
+    id: Date.now(), mode: state.home.mode, keys, answers: {}, submitted: {}, idx: 0, finished: false,
+    remaining: state.home.mode === 'timed' ? n * SECONDS_PER_Q : null, startedAt: Date.now(), fresh: true,
+  };
+  await saveSession();
+  go('quiz');
+  state.session.fresh = false;
 }
-
-function start() {
-  state.session = { answered: 0, correct: 0, recent: [], current: null, chosen: null, fresh: false };
-  nextQuestion();
-}
-
-function nextQuestion() {
-  flushOutbox();
+async function finishBlock() {
   const s = state.session;
-  s.current = pickQuestion();
-  s.chosen = null;
-  s.fresh = true;
-  if (s.current) {
-    s.recent.push(s.current.key);
-    const cap = Math.min(15, Math.max(1, Math.floor(pool().length / 2)));
-    if (s.recent.length > cap) s.recent = s.recent.slice(-cap);
+  if (!s || s.finished) return;
+  stopTimer();
+  flushOutbox();
+  if (s.mode === 'timed') {
+    for (const key of s.keys) {
+      const a = s.answers[key];
+      if (a) recordAnswer(key, a, a === state.byKey.get(key).q.answer);
+    }
   }
-  state.view = 'play';
-  render();
-  window.scrollTo(0, 0);
+  s.finished = true;
+  s.idx = 0;
+  await saveSession();
+  go('results');
+}
+function moveTo(i) {
+  const s = state.session;
+  s.idx = i;
+  s.fresh = !s.finished;
+  saveSession();
+  flushOutbox();
+  go('quiz');
   s.fresh = false;
 }
 
-function answer(label) {
-  const s = state.session;
-  if (!s || !s.current || s.chosen) return;
-  const ok = label === s.current.q.answer;
-  s.chosen = label;
-  s.answered += 1;
-  if (ok) { s.correct += 1; buzz(25); } else { buzz([70, 50, 70]); }
-  recordAnswer(s.current, label, ok);
-  render();
-  const tk = document.getElementById('takeaway');
-  if (tk) {
-    const r = tk.getBoundingClientRect();
-    if (r.bottom > window.innerHeight - 90) {
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      window.scrollBy({ top: r.bottom - window.innerHeight + 110, behavior: reduce ? 'auto' : 'smooth' });
-    }
-  }
+// ---------- Feedback ----------
+function blankFeedback(key) {
+  const [bankId, ...rest] = key.split('::');
+  return { key, bankId, questionId: rest.join('::'), types: [], note: '', updatedAt: 0 };
 }
-
-function done() {
-  flushOutbox();
-  state.session = null;
-  go('home');
-}
-
-function blankFeedback(s) {
-  return { key: s.current.key, bankId: s.current.bank.id, questionId: s.current.q.id, types: [], note: '', updatedAt: 0 };
-}
-
 async function toggleFlag(type) {
   const s = state.session;
-  if (!s || !s.current) return;
-  const key = s.current.key;
-  const fb = state.feedback.get(key) || blankFeedback(s);
+  const key = s.keys[s.idx];
+  const fb = state.feedback.get(key) || blankFeedback(key);
   fb.types = fb.types.includes(type) ? fb.types.filter(t => t !== type) : [...fb.types, type];
   fb.updatedAt = Date.now();
-  // Update in place so the open explanation doesn't collapse
-  document.querySelectorAll('[data-action="flag"]').forEach(b => b.setAttribute('aria-pressed', fb.types.includes(b.dataset.type)));
+  document.querySelectorAll('[data-action="flagType"]').forEach(b => b.classList.toggle('on', fb.types.includes(b.dataset.v)));
   const note = document.getElementById('note');
   if (note) note.hidden = !fb.types.length;
-  if (!fb.types.length && !fb.note) {
-    state.feedback.delete(key);
-    await idb.del('feedback', key);
-  } else {
-    state.feedback.set(key, fb);
-    await idb.put('feedback', fb);
-  }
+  if (!fb.types.length && !fb.note) { state.feedback.delete(key); await idb.del('feedback', key); }
+  else { state.feedback.set(key, fb); await idb.put('feedback', fb); }
   queueSend(key);
 }
-
 let noteTimer;
 function saveNote(value) {
   const s = state.session;
-  if (!s || !s.current) return;
-  const key = s.current.key;
-  const fb = state.feedback.get(key) || blankFeedback(s);
+  const key = s.keys[s.idx];
+  const fb = state.feedback.get(key) || blankFeedback(key);
   fb.note = value;
   fb.updatedAt = Date.now();
   state.feedback.set(key, fb);
   clearTimeout(noteTimer);
   noteTimer = setTimeout(() => { idb.put('feedback', fb); queueSend(key); }, 600);
 }
-
-function normalizeBank(data, filename) {
-  const bank = Array.isArray(data) ? { questions: data } : data;
-  if (!bank || !Array.isArray(bank.questions)) throw new Error('no "questions" list');
-  if (bank.type === 'feedback' || bank.type === 'progress') throw new Error('this is an export file, not a question bank');
-  const id = String(bank.id || filename.replace(/\.json$/i, '')).trim();
-  const questions = bank.questions.filter(q => q && q.id && q.stem && Array.isArray(q.options) && q.answer);
-  if (!questions.length) throw new Error('no valid questions');
-  return {
-    id, title: bank.title || id, version: bank.version || '',
-    questions: questions.map(q => {
-      const { source_quote, outside_facts, ...rest } = q;
-      return rest;
-    }),
-    enabled: true, addedAt: Date.now(),
-  };
-}
-
-async function addBanks(files) {
-  let added = 0;
-  for (const f of files) {
-    try {
-      const bank = normalizeBank(JSON.parse(await f.text()), f.name);
-      const old = state.banks.find(b => b.id === bank.id);
-      if (old) { bank.enabled = old.enabled; bank.addedAt = old.addedAt; }
-      await idb.put('banks', bank);
-      state.banks = state.banks.filter(b => b.id !== bank.id).concat(bank).sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
-      added++;
-      toast(`${old ? 'Updated' : 'Added'} ${bank.title}: ${bank.questions.length} questions`);
-    } catch (e) {
-      toast(`Couldn\u2019t add ${f.name}: ${e.message}`);
-    }
-  }
-  if (added) render();
-}
-
-// ---------- Feedback: shared item format ----------
 function feedbackItem(fb) {
-  const banks = new Map([...state.banks, SAMPLE_BANK].map(b => [b.id, b]));
   const labels = Object.fromEntries(FEEDBACK_TYPES);
-  const bank = banks.get(fb.bankId);
-  const q = bank && (bank.questions || []).find(x => x.id === fb.questionId);
+  const item = state.byKey.get(fb.key);
+  const bank = item ? item.bank : state.banks.find(b => b.id === fb.bankId);
   const p = state.progress.get(fb.key);
   const last = p && p.history.length ? p.history[p.history.length - 1] : null;
   return {
@@ -638,24 +729,20 @@ function feedbackItem(fb) {
     note: fb.note || '',
     feedback_at: new Date(fb.updatedAt || Date.now()).toISOString(),
     my_performance: p ? { attempts: p.attempts, correct: p.correct, last_choice: last ? last.c : null, last_correct: last ? last.ok : null } : null,
-    question: q || null,
+    question: item ? item.q : null,
   };
 }
 
-// ---------- Sending flags to the maintainer (Google Sheet) ----------
+// Sending to the maintainer's Google Sheet
 let sendTimer;
 function queueSend(key) {
   if (!FEEDBACK_ENDPOINT) return;
-  const fb = state.feedback.get(key) || (() => {
-    const [bankId, ...rest] = key.split('::');
-    return { key, bankId, questionId: rest.join('::'), types: [], note: '', updatedAt: Date.now() };
-  })();
+  const fb = state.feedback.get(key) || { ...blankFeedback(key), updatedAt: Date.now() };
   state.outbox.set(key, { ...feedbackItem(fb), client_id: state.clientId, name: state.settings.name || '', app_version: APP_VERSION });
   setMeta('outbox', [...state.outbox.entries()]);
   clearTimeout(sendTimer);
   sendTimer = setTimeout(flushOutbox, 4000);
 }
-
 let flushing = false;
 async function flushOutbox() {
   clearTimeout(sendTimer);
@@ -670,19 +757,17 @@ async function flushOutbox() {
           body: JSON.stringify(payload),
         });
         if (state.outbox.get(key) === payload) state.outbox.delete(key);
-      } catch (e) {
-        break; // offline or blocked: keep the rest for later
-      }
+      } catch (e) { break; }
     }
     await setMeta('outbox', [...state.outbox.entries()]);
-  } finally {
-    flushing = false;
-  }
+  } finally { flushing = false; }
   const pend = document.getElementById('pending');
   if (pend) pend.textContent = state.outbox.size;
 }
 window.addEventListener('online', flushOutbox);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushOutbox(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { saveSession(); flushOutbox(); }
+});
 
 async function exportFeedback() {
   const labels = Object.fromEntries(FEEDBACK_TYPES);
@@ -690,126 +775,199 @@ async function exportFeedback() {
   const summary = { questions: items.length };
   for (const [t] of FEEDBACK_TYPES) summary[t] = items.filter(i => i.feedback.includes(t)).length;
   await shareJson(`pager-feedback-${new Date().toISOString().slice(0, 10)}.json`, {
-    type: 'feedback', app: 'pager', exportedAt: new Date().toISOString(),
-    feedback_types: labels, summary, items,
+    type: 'feedback', app: 'pager', exportedAt: new Date().toISOString(), feedback_types: labels, summary, items,
   });
 }
 
+// ---------- Banks + backup ----------
+function normalizeBank(data, filename) {
+  const bank = Array.isArray(data) ? { questions: data } : data;
+  if (!bank || !Array.isArray(bank.questions)) throw new Error('no "questions" list');
+  if (bank.type === 'feedback' || bank.type === 'progress') throw new Error('this is an export file, not a question bank');
+  const id = String(bank.id || filename.replace(/\.json$/i, '')).trim();
+  const questions = bank.questions.filter(q => q && q.id && q.stem && Array.isArray(q.options) && q.answer);
+  if (!questions.length) throw new Error('no valid questions');
+  return {
+    id, title: bank.title || id, version: bank.version || '',
+    questions: questions.map(q => { const { source_quote, outside_facts, ...rest } = q; return rest; }),
+    enabled: true, addedAt: Date.now(),
+  };
+}
+async function addBanks(files) {
+  for (const f of files) {
+    try {
+      const bank = normalizeBank(JSON.parse(await f.text()), f.name);
+      const old = state.banks.find(b => b.id === bank.id);
+      if (old) { bank.enabled = old.enabled; bank.addedAt = old.addedAt; }
+      await idb.put('banks', bank);
+      state.banks = state.banks.filter(b => b.id !== bank.id).concat(bank).sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+      toast(`${old ? 'Updated' : 'Added'} ${bank.title}: ${bank.questions.length} questions`);
+    } catch (e) {
+      toast(`Couldn\u2019t add ${f.name}: ${e.message}`, 4000);
+    }
+  }
+  rebuildIndex();
+  dropStaleSession();
+  render();
+}
+function dropStaleSession() {
+  if (state.session && !state.session.keys.every(k => state.byKey.has(k))) { state.session = null; saveSession(); }
+}
 async function exportProgress() {
   await shareJson(`pager-progress-${new Date().toISOString().slice(0, 10)}.json`, {
-    app: 'pager', type: 'progress', format: 2, exportedAt: new Date().toISOString(),
+    app: 'pager', type: 'progress', format: 3, exportedAt: new Date().toISOString(),
     banks: state.banks.map(b => ({ id: b.id, title: b.title, version: b.version })),
-    settings: state.settings,
-    progress: [...state.progress.values()],
-    feedback: [...state.feedback.values()],
+    progress: [...state.progress.values()], feedback: [...state.feedback.values()],
   });
 }
-
-async function importProgress(file) {
-  try {
-    const data = JSON.parse(await file.text());
-    if (data.type !== 'progress' || !Array.isArray(data.progress)) throw new Error('not a progress backup');
-    let n = 0;
-    for (const raw of data.progress) {
-      const key = raw.key || (raw.bankId && raw.questionId ? keyOf(raw.bankId, raw.questionId) : null);
-      if (!key) continue;
-      const [bankId, ...rest] = key.split('::');
-      const rec = {
-        key, bankId: raw.bankId || bankId, questionId: raw.questionId || rest.join('::'),
-        attempts: raw.attempts || 0, correct: raw.correct || 0,
-        history: Array.isArray(raw.history) ? raw.history.slice(-20) : [],
-        box: typeof raw.box === 'number' ? raw.box : 0,
-        due: typeof raw.due === 'number' ? raw.due : 0,
-        lastSeen: raw.lastSeen || 0,
-      };
-      const cur = state.progress.get(key);
-      if (!cur || rec.attempts >= cur.attempts) { state.progress.set(key, rec); await idb.put('progress', rec); n++; }
-    }
-    for (const fb of data.feedback || []) {
-      if (!fb.key || !Array.isArray(fb.types)) continue;
-      state.feedback.set(fb.key, fb);
-      await idb.put('feedback', fb);
-    }
-    toast(`Imported progress for ${n} questions`);
-    render();
-  } catch (e) {
-    toast(`Couldn\u2019t import: ${e.message}`);
+async function importProgress(data) {
+  if (data.type !== 'progress' || !Array.isArray(data.progress)) throw new Error('not a progress backup');
+  let n = 0;
+  for (const raw of data.progress) {
+    const key = raw.key || (raw.bankId && raw.questionId ? keyOf(raw.bankId, raw.questionId) : null);
+    if (!key) continue;
+    const [bankId, ...rest] = key.split('::');
+    const rec = {
+      key, bankId: raw.bankId || bankId, questionId: raw.questionId || rest.join('::'),
+      attempts: raw.attempts || 0, correct: raw.correct || 0,
+      history: Array.isArray(raw.history) ? raw.history.slice(-20) : [],
+      box: typeof raw.box === 'number' ? raw.box : 0, due: typeof raw.due === 'number' ? raw.due : 0, lastSeen: raw.lastSeen || 0,
+    };
+    const cur = state.progress.get(key);
+    if (!cur || rec.attempts >= cur.attempts) { state.progress.set(key, rec); await idb.put('progress', rec); n++; }
   }
+  for (const fb of data.feedback || []) {
+    if (!fb.key || !Array.isArray(fb.types)) continue;
+    state.feedback.set(fb.key, fb);
+    await idb.put('feedback', fb);
+  }
+  render();
+  toast(`Imported progress for ${n} questions`);
 }
 
-// ---------- Events ----------
-function openSystems() { const d = document.querySelector('details.systems'); if (d) d.open = true; }
+// ---------- Actions ----------
+const actions = {
+  go: el => go(el.dataset.view),
+  dismissHint: () => { state.hints.installDismissed = true; setMeta('hints', state.hints); render(); },
+  mode: el => { state.home.mode = el.dataset.v; saveHome(); render(); },
+  pool: el => { state.home.pool = el.dataset.v; saveHome(); render(); },
+  sys: el => {
+    const v = el.dataset.v;
+    const sel = state.home.systems;
+    state.home.systems = v === '*' ? [] : sel.includes(v) ? sel.filter(x => x !== v) : [...sel, v];
+    saveHome(); render();
+  },
+  src: async el => {
+    const v = el.dataset.v;
+    if (v === '*') state.banks.forEach(b => { b.enabled = true; });
+    else {
+      const b = state.banks.find(x => x.id === v);
+      if (b) {
+        const others = state.banks.filter(x => x !== b && x.enabled !== false).length;
+        if (b.enabled !== false && !others) return toast('Keep at least one source selected');
+        b.enabled = b.enabled === false;
+      }
+    }
+    for (const b of state.banks) await idb.put('banks', b);
+    render();
+  },
+  count: el => {
+    const avail = candidates().length;
+    const cur = Math.min(state.home.count, avail);
+    const up = Number(el.dataset.d) > 0;
+    let next;
+    if (up) next = cur < 10 ? cur + 1 : Math.floor(cur / 5) * 5 + 5;
+    else next = cur <= 10 ? cur - 1 : Math.ceil(cur / 5) * 5 - 5;
+    state.home.count = Math.max(1, Math.min(avail || 1, next));
+    saveHome(); render();
+  },
+  start: startBlock,
+  resume: () => { state.session.fresh = true; go('quiz'); state.session.fresh = false; },
+  discard: async () => {
+    if (!confirm('Discard this block? Answers already given in tutor mode stay recorded.')) return;
+    state.session = null; await saveSession(); render();
+  },
+  choose: el => {
+    const s = state.session;
+    const key = s.keys[s.idx];
+    if (s.finished || (s.mode === 'tutor' && s.submitted[key])) return;
+    const label = el.dataset.label;
+    s.answers[key] = label;
+    if (s.mode === 'tutor') {
+      s.submitted[key] = true;
+      const ok = label === state.byKey.get(key).q.answer;
+      recordAnswer(key, label, ok);
+      buzz(ok ? 25 : [70, 50, 70]);
+    }
+    saveSession();
+    go('quiz', { keepScroll: true });
+  },
+  next: () => { const s = state.session; if (s.idx < s.keys.length - 1) moveTo(s.idx + 1); },
+  prev: () => { const s = state.session; if (s.idx > 0) moveTo(s.idx - 1); },
+  finish: () => {
+    const s = state.session;
+    const unanswered = s.keys.filter(k => !s.answers[k]).length;
+    if (s.mode === 'timed' && !confirm(unanswered ? `End block with ${unanswered} unanswered?` : 'End block and see results?')) return;
+    if (s.mode === 'tutor' && unanswered && !confirm(`Finish with ${unanswered} skipped?`)) return;
+    finishBlock();
+  },
+  exit: () => { saveSession(); flushOutbox(); go(state.session.finished ? 'results' : 'home'); },
+  review: el => { state.session.idx = Number(el.dataset.i); saveSession(); go('quiz'); },
+  flagType: el => toggleFlag(el.dataset.v),
+  removeBank: async el => {
+    const b = state.banks.find(x => x.id === el.dataset.v);
+    if (!b || !confirm(`Remove \u201c${b.title}\u201d from this phone? Your progress on it is kept and comes back if you add the file again.`)) return;
+    await idb.del('banks', b.id);
+    state.banks = state.banks.filter(x => x.id !== b.id);
+    rebuildIndex(); dropStaleSession(); render();
+    toast(`Removed ${b.title}`);
+  },
+  exportFeedback,
+  clearFeedback: async () => {
+    if (!confirm('Clear all question feedback on this phone? Export it first if you still need it.')) return;
+    await idb.clear('feedback'); state.feedback.clear(); render();
+  },
+  exportProgress,
+  resetProgress: async () => {
+    if (!confirm('Erase all answer history and review dates on this phone?')) return;
+    if (!confirm('This cannot be undone. Consider exporting first. Erase anyway?')) return;
+    await idb.clear('progress'); state.progress.clear();
+    state.session = null; await saveSession();
+    render(); toast('Progress reset');
+  },
+};
 
-document.addEventListener('click', async e => {
+document.addEventListener('click', e => {
   const el = e.target.closest('[data-action]');
-  if (!el) return;
-  const a = el.dataset.action;
-  if (a === 'start') start();
-  else if (a === 'answer') answer(el.dataset.label);
-  else if (a === 'next') nextQuestion();
-  else if (a === 'done') done();
-  else if (a === 'go') go(el.dataset.view);
-  else if (a === 'flag') toggleFlag(el.dataset.type);
-  else if (a === 'dismissHint') { state.hints.installDismissed = true; setMeta('hints', state.hints); render(); }
-  else if (a === 'sysAll') { state.settings.systems = []; setMeta('settings', state.settings); render(); openSystems(); }
-  else if (a === 'sys') {
-    const sys = el.dataset.sys;
-    const sel = state.settings.systems;
-    state.settings.systems = sel.includes(sys) ? sel.filter(x => x !== sys) : [...sel, sys];
-    setMeta('settings', state.settings);
-    render(); openSystems();
-  }
-  else if (a === 'removeBank') {
-    const b = state.banks.find(x => x.id === el.dataset.id);
-    if (b && confirm(`Remove ${b.title}? Your progress on it stays saved if you add it again later.`)) {
-      await idb.del('banks', b.id);
-      state.banks = state.banks.filter(x => x.id !== b.id);
-      render();
-    }
-  }
-  else if (a === 'exportFeedback') exportFeedback();
-  else if (a === 'clearFeedback') {
-    if (confirm('Clear all question feedback on this phone? Export it first if you still need it.')) {
-      await idb.clear('feedback'); state.feedback.clear(); render();
-    }
-  }
-  else if (a === 'exportProgress') exportProgress();
-  else if (a === 'resetProgress') {
-    if (confirm('Reset all progress? This can\u2019t be undone.')) {
-      await idb.clear('progress'); state.progress.clear();
-      toast('Progress reset');
-      render();
-    }
-  }
+  if (!el || el.disabled) return;
+  const fn = actions[el.dataset.action];
+  if (fn) fn(el);
 });
-
 document.addEventListener('change', async e => {
-  const el = e.target.closest('[data-change]');
-  if (!el) return;
-  const c = el.dataset.change;
-  if (c === 'addBanks') { await addBanks([...el.files]); el.value = ''; }
-  else if (c === 'importProgress') { if (el.files[0]) await importProgress(el.files[0]); el.value = ''; }
-  else if (c === 'sr' || c === 'buzz') { state.settings[c] = el.checked; setMeta('settings', state.settings); }
-  else if (c === 'bankToggle') {
-    const b = state.banks.find(x => x.id === el.dataset.id);
-    if (b) { b.enabled = el.checked; await idb.put('banks', b); render(); }
+  const el = e.target;
+  if (el.dataset.file) {
+    const files = [...(el.files || [])];
+    el.value = '';
+    if (!files.length) return;
+    if (el.dataset.file === 'bank') return addBanks(files);
+    try { await importProgress(JSON.parse(await files[0].text())); }
+    catch (err) { toast(`Couldn\u2019t import: ${err.message}`, 4000); }
+    return;
   }
+  const c = el.dataset.change;
+  if (c === 'sr' || c === 'buzz') { state.settings[c] = el.checked; setMeta('settings', state.settings); }
 });
-
 document.addEventListener('input', e => {
   if (e.target.id === 'note') saveNote(e.target.value);
   else if (e.target.dataset.input === 'name') { state.settings.name = e.target.value.trim().slice(0, 60); setMeta('settings', state.settings); }
 });
-
-// Number keys 1–5 / letters A–E answer on a keyboard; Enter goes to the next question
 document.addEventListener('keydown', e => {
-  if (state.view !== 'play' || !state.session || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
-  const s = state.session;
-  if (!s.chosen) {
-    const map = { 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E' };
-    const label = map[e.key] || (/^[a-e]$/i.test(e.key) ? e.key.toUpperCase() : null);
-    if (label) answer(label);
-  } else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') nextQuestion();
+  if (state.view !== 'quiz' || !state.session || /TEXTAREA|INPUT/.test(e.target.tagName)) return;
+  const map = { 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E' };
+  const label = map[e.key] || (/^[a-e]$/i.test(e.key) ? e.key.toUpperCase() : null);
+  if (label) { const el = document.querySelector(`[data-action="choose"][data-label="${label}"]`); if (el && !el.disabled) actions.choose(el); }
+  else if (e.key === 'ArrowRight') actions.next();
+  else if (e.key === 'ArrowLeft') actions.prev();
 });
 
 // ---------- Boot ----------
@@ -820,8 +978,11 @@ async function boot() {
     state.progress = new Map(progress.map(p => [p.key, p]));
     state.feedback = new Map(feedback.map(f => [f.key, f]));
     state.settings = { ...state.settings, ...(await getMeta('settings', {})) };
+    delete state.settings.systems;
+    state.home = { ...state.home, ...(await getMeta('home', {})) };
     state.hints = { ...state.hints, ...(await getMeta('hints', {})) };
     state.outbox = new Map(await getMeta('outbox', []));
+    state.session = await getMeta('session', null);
     state.clientId = await getMeta('clientId', '');
     if (!state.clientId) {
       state.clientId = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now();
@@ -830,11 +991,11 @@ async function boot() {
   } catch (e) {
     toast('Storage is unavailable, so progress won\u2019t be saved.');
   }
-  render();
+  rebuildIndex();
+  if (state.session && (!Array.isArray(state.session.keys) || !state.session.keys.every(k => state.byKey.has(k)))) state.session = null;
+  go('home');
   flushOutbox();
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* ignore */ }
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  }
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 boot();

@@ -1,6 +1,6 @@
 # Pager
 
-A simple internal medicine question app for answering a few questions on the go. Pick your question banks on the home screen, tap Start, and each question arrives on a pager screen. It's a static web app that runs offline and installs to the home screen on iPhone and Android.
+Offline internal medicine question bank, with each question shown on a pager screen. It's a static web app that runs offline and installs to the home screen on iPhone and Android.
 
 This repo holds the app only. Question banks are loaded on each phone from a file and are never stored here.
 
@@ -21,9 +21,12 @@ Open it once while online so it caches for offline use.
 
 ## Using it
 
-- **Home:** tick the banks you want (Add bank files to load new ones), optionally narrow by system, then **Start**.
-- **Questions:** tap an answer to see the one-line takeaway. **Full explanation** has the rest, why the other options are wrong, the source, outside links, and the flag buttons. **Done** goes back home. Every answer saves immediately.
-- **Settings → Spaced repetition:** on, missed questions come back sooner and well-known ones show up less. Off, questions are random with unseen ones first.
+- **Home:** your stats (used, correct, and due if spaced repetition is on), a resume card for any block in progress, then Mode, Questions (Unused, All, Incorrect, Flagged, Due), Sources (when you have more than one bank), Systems, Number of questions, and Start block.
+- **Tutor mode:** tap an answer to lock it in. Each choice then shows a one-line reason it's right or wrong, followed by the explanation, source, outside links and the feedback tags. Nothing is hidden behind a dropdown.
+- **Timed mode:** 90 seconds per question, answers can be changed, explanations at the end.
+- **Results:** score for the block and a list you can tap to review each question.
+- **Settings → Spaced repetition:** on, each answer sets a review date and the Due filter appears. Off, there are no review dates.
+- Question banks are added and removed in Settings. "Flagged" means questions you've given feedback on.
 
 ## Question bank format
 
