@@ -3,7 +3,7 @@
  * Paste this into Extensions → Apps Script of a Google Sheet, then deploy as a web app
  * (Execute as: Me, Who has access: Anyone). Put the /exec URL in FEEDBACK_ENDPOINT in app.js.
  *
- * Script v2: accepts any feedback type the app sends, so changing the app's options won't break it.
+ * Script v3: accepts any feedback type the app sends, and comments of up to 200 words with any characters.
  *
  * One row per person per question. If someone edits their flag, their row is updated;
  * if they remove all tags and the note, their row is deleted.
@@ -14,7 +14,9 @@
 const SHEET_NAME = 'Feedback';
 const HEADERS = ['received_at', 'name', 'bank_id', 'bank_title', 'bank_version', 'question_id',
   'feedback', 'note', 'feedback_at', 'my_performance', 'question', 'app_version', 'client_id'];
-const SCRIPT_VERSION = 'v2';
+const SCRIPT_VERSION = 'v3';
+const NOTE_MAX_WORDS = 200;      // comments: up to 200 words, any characters
+const NOTE_MAX_CHARS = 5000;     // safety cap for very long "words" (e.g. pasted links)
 // Known feedback types get friendly labels. Any other type the app sends (now or in a future
 // version) is still accepted and stored, so changing the app's feedback options never breaks this.
 const LABELS = {
@@ -43,6 +45,12 @@ function safe_(v, max) {
   return s;
 }
 
+// Keeps the comment exactly as written (emoji, accents, line breaks, symbols) up to the word limit.
+function limitWords_(s, max) {
+  const m = String(s == null ? '' : s).match(new RegExp('^\\s*(?:\\S+\\s*){0,' + max + '}'));
+  return (m ? m[0] : '').replace(/\s+$/, '');
+}
+
 function doPost(e) {
   const body = e && e.postData ? e.postData.contents : '';
   if (!body || body.length > MAX_BODY) return ContentService.createTextOutput('rejected');
@@ -68,7 +76,7 @@ function doPost(e) {
       if (values[i][col('client_id')] === clientId && values[i][col('bank_id')] === bankId &&
           values[i][col('question_id')] === questionId) { rowIndex = i + 1; break; }
     }
-    const note = safe_(d.note, 2000);
+    const note = safe_(limitWords_(d.note, NOTE_MAX_WORDS), NOTE_MAX_CHARS);
     if (!tags.length && !note) {
       if (rowIndex > 0) sh.deleteRow(rowIndex);
       return ContentService.createTextOutput('ok');

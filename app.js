@@ -1,6 +1,7 @@
 'use strict';
 
-const APP_VERSION = '4.2.0';
+const APP_VERSION = '4.3.0';
+const NOTE_MAX_WORDS = 200;
 
 // Shared banks: the app checks this list on launch and pulls any bank that changed.
 const SHARED_DIR = 'banks/';
@@ -8,7 +9,7 @@ const SHARED_INDEX = SHARED_DIR + 'index.json';
 const SYNC_EVERY_MS = 30 * 60 * 1000;
 
 // Paste your Google Apps Script web app URL here (ends in /exec). Leave empty to turn off sending.
-const FEEDBACK_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwMWpZL9X5_OBCqwRi5Y-WwRjIh6-7KCzBt4NfaPeZmSMK4t-iAFt-qJt_j82Lu0HZ9ww/exec';
+const FEEDBACK_ENDPOINT = '';
 
 // Spaced repetition intervals by box (box 0 = just missed)
 const MIN = 60 * 1000, DAY = 24 * 60 * MIN;
@@ -456,6 +457,7 @@ function viewQuiz() {
       </div>
       <label class="field"><span class="small muted">Optional feedback${FEEDBACK_ENDPOINT ? ', sent to the question bank maintainer' : ''}</span>
         <textarea id="note" placeholder="Anything to add?">${esc(fb ? fb.note : '')}</textarea>
+        <div class="note-count small muted" id="noteCount">${countWords(fb ? fb.note : '')}/${NOTE_MAX_WORDS} words</div>
       </label>
     </section>`;
   }
@@ -654,6 +656,22 @@ async function pickFeedback(el) {
   await storeFeedback(key, fb);
 }
 let noteTimer, noteDirty = false;
+function countWords(s) { return (String(s || '').match(/\S+/g) || []).length; }
+// Keep the text exactly as typed (any characters, line breaks, emoji); only stop after the word limit.
+function limitWords(s, max) {
+  const m = String(s || '').match(new RegExp('^\\s*(?:\\S+\\s*){0,' + max + '}'));
+  return m ? m[0] : '';
+}
+function onNoteInput(el) {
+  if (countWords(el.value) > NOTE_MAX_WORDS) {
+    el.value = limitWords(el.value, NOTE_MAX_WORDS).replace(/\s+$/, '');
+    toast(`Comments are limited to ${NOTE_MAX_WORDS} words`);
+  }
+  const n = countWords(el.value);
+  const c = document.getElementById('noteCount');
+  if (c) { c.textContent = `${n}/${NOTE_MAX_WORDS} words`; c.classList.toggle('at-limit', n >= NOTE_MAX_WORDS); }
+  saveNote(el.value);
+}
 function saveNote(value) {
   const key = state.run.key;
   const fb = state.feedback.get(key) || blankFeedback(key);
@@ -922,7 +940,7 @@ document.addEventListener('change', async e => {
   if (c === 'sr' || c === 'buzz') { state.settings[c] = el.checked; setMeta('settings', state.settings); }
 });
 document.addEventListener('input', e => {
-  if (e.target.id === 'note') saveNote(e.target.value);
+  if (e.target.id === 'note') onNoteInput(e.target);
   else if (e.target.dataset.input === 'name') { state.settings.name = e.target.value.trim().slice(0, 60); setMeta('settings', state.settings); }
 });
 document.addEventListener('focusout', e => { if (e.target.id === 'note') noteDone(e.target); });
