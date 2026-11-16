@@ -1,6 +1,7 @@
 {
   "banks": [
     "rcpsc-im-v2.json",
-    "medical-trivia.json"
+    "medical-trivia.json",
+    "guideline_review.json"
   ]
 }
